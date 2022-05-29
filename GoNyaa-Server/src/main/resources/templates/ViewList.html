@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>列表</title>
+    <!-- jquery -->
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <!-- bootstrap -->
+    <link rel="stylesheet" type="text/css" th:href="@{/bootstrap/css/bootstrap.min.css}"/>
+    <script type="text/javascript" th:src="@{/bootstrap/js/bootstrap.min.js}"></script>
+    <!-- layer -->
+    <script type="text/javascript" th:src="@{/layer/layer.js}"></script>
+    <!-- common.js -->
+    <script type="text/javascript" th:src="@{/js/common.js}"></script>
+</head>
+<body>
+<div class="panel panel-default">
+    <div class="panel-heading">列表</div>
+    <table class="table" id="goodslist">
+        <tr>
+            <td>番号</td>
+            <td style="width: 50px">预览</td>
+            <td>大小</td>
+            <td>标题</td>
+            <td>日期</td>
+            <td>上传</td>
+            <td>下载</td>
+            <td>完成</td>
+            <td style="width: 50px">磁力</td>
+        </tr>
+        <tr th:each="goods,goodsStat : ${goodsList}">
+            <td th:text="${goods.fanHao}"></td>
+            <td style="width: 50px"><a th:href="${goods.viewLink}" target="_blank">预览</a></td>
+            <td th:text="${goods.size}"></td>
+            <td th:text="${goods.title}"></td>
+            <td th:text="${goods.date}"></td>
+            <td th:text="${goods.upCnt}"></td>
+            <td th:text="${goods.downCnt}"></td>
+            <td th:text="${goods.finCnt}"></td>
+            <td style="width: 50px"><a th:href="${goods.magnetLink}">磁力</a></td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
