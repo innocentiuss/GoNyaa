@@ -28,11 +28,8 @@ public class MainController {
 
     @GetMapping("/list")
     public String getUrl(Model model, HttpServletRequest request, HttpServletResponse response,@RequestParam(defaultValue = "1", required = false) String page) {
-        List<VideoInformation> infos = informationService.getInfos(page);
-        List<VideoInfoVo> voList = informationService.transToInfo(infos);
-
+        List<VideoInfoVo> voList = informationService.access(page);
         model.addAttribute("goodsList", voList);
-
         WebContext webContext = new WebContext(request, response, request.getServletContext(), request.getLocale(), model.asMap());
         return thymeleafViewResolver.getTemplateEngine().process("ViewList", webContext);
     }

@@ -8,6 +8,7 @@ import com.example.geturl.model.VideoInfoVo;
 import com.example.geturl.model.VideoInformation;
 import com.example.geturl.utils.CommonUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,9 @@ public class InformationService {
     private String pythonFlaskIp;
     @Value("${python.flask.port}")
     private String pythonFlaskPort;
+
+    @Autowired
+    private CacheService cacheService;
 
     public List<VideoInformation> getInfos(String page) {
         String body = HttpRequest.get("http://" + pythonFlaskIp + ":" + pythonFlaskPort + "/app?page=" + page).execute().body();
@@ -52,5 +56,14 @@ public class InformationService {
             result.add(vo);
         }
         return result;
+    }
+
+    public List<VideoInfoVo> access(String page) {
+        if (cacheService.contains(page))
+            return cacheService.get(page);
+
+        List<VideoInfoVo> voList = transToInfo(getInfos(page));
+        cacheService.put(page, voList);
+        return voList;
     }
 }
