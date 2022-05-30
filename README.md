@@ -10,7 +10,9 @@ Java: JDK11 with Maven
 
 Python: Collecting data from nyaa order by uploading count;
 
-Java: Offering web frontend and backend; Using HTTP to communicate with python crawler.
+Java: Offering web frontend and backend;
+
+RPC by HTTP.
 
 ##### Extra attention
 
