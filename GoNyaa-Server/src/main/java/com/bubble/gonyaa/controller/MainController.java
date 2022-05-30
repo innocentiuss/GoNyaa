@@ -28,7 +28,7 @@ public class MainController {
     @GetMapping("/list")
     public String getUrl(Model model, HttpServletRequest request, HttpServletResponse response,
                          @RequestParam(defaultValue = "1", required = false) String page,
-                         @RequestParam(defaultValue = "downloading", required = false) String sort) {
+                         @RequestParam(defaultValue = "uploading", required = false) String sort) {
         List<VideoInfoVo> voList = informationService.access(page, sort);
         int curPage = Integer.parseInt(page);
         model.addAttribute("curPage", curPage);

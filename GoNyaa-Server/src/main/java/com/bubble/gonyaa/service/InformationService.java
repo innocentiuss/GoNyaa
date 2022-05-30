@@ -1,5 +1,6 @@
 package com.bubble.gonyaa.service;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -41,7 +42,7 @@ public class InformationService {
             videoInformation.setUpCnt(jsonObject.getString("upload_cnt"));
             videoInformation.setMagnetLink(jsonObject.getString("magnet_url"));
             videoInformation.setSize(jsonObject.getString("size"));
-            videoInformation.setTitle(jsonObject.getString("title"));
+            videoInformation.setTitle(Base64.decodeStr(jsonObject.getString("title")));  // base64 decode first
             videoInformation.setFinCnt(jsonObject.getString("downloaded"));
             videoInformation.setType(CommonUtils.getTypeFromId(videoInformation.getFanHao()));
             videoInformation.setViewLink(CommonUtils.getPreviewLink(videoInformation.getFanHao(), videoInformation.getType()));

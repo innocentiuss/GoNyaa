@@ -2,6 +2,7 @@
 
 from flask import Flask, jsonify, request
 import requests
+import base64
 from bs4 import BeautifulSoup
 from bs4 import Tag
 import re
@@ -67,7 +68,9 @@ def get_id_from_title(full_title):
 
 
 def get_title_from_full_title(full_title, fan_hao):
-    return full_title.split(fan_hao)[1]
+    # 将标题先utf8转成byte流, 再base64
+    raw = full_title.split(fan_hao)[1]
+    return base64.b64encode(raw.encode('utf-8')).decode('utf-8')  # 返回str形式
 
 
 # 分别为大小、时间、上传数、下载数、完成数、磁力链接
