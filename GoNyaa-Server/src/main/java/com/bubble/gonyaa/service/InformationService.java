@@ -61,11 +61,11 @@ public class InformationService {
     }
 
     public List<VideoInfoVo> access(String page, String sort) {
-        if (cacheService.contains(page))
-            return cacheService.get(page);
+        if (cacheService.contains(page + sort))
+            return cacheService.get(page + sort);
 
         List<VideoInfoVo> voList = transToInfo(getInfos(page, sort));
-        cacheService.put(page, voList);
+        cacheService.put(page + sort, voList);
         return voList;
     }
 }
