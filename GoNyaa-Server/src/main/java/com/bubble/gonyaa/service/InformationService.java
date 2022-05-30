@@ -26,6 +26,8 @@ public class InformationService {
 
     @Autowired
     private CacheService cacheService;
+    @Autowired
+    private MemoryService memoryService;
 
     public List<VideoInformation> getInfos(String page, String sort) {
         sort = CommonUtils.sortChange(sort);
@@ -56,6 +58,9 @@ public class InformationService {
         for (VideoInformation originInfo : originList) {
             VideoInfoVo vo = new VideoInfoVo();
             BeanUtils.copyProperties(originInfo, vo);
+            // 检查是否已经确认
+            boolean flag = memoryService.isViewed(vo.getFanHao());
+            vo.setIsViewed(flag ? "T" : "F");
             result.add(vo);
         }
         return result;

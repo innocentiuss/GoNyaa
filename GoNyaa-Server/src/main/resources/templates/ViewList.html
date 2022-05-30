@@ -22,6 +22,8 @@
         <a th:href="@{~/list(page=${nextPage},sort=${sort})}">下一页</a>
         <a th:href="@{~/list(page=${curPage},sort='uploading')}">上传数排序</a>
         <a th:href="@{~/list(page=${curPage},sort='downloading')}">下载数排序</a>
+        <a th:href="@{~/refresh}">清除缓存</a>
+        <a th:href="@{~/save}">保存已阅记录到硬盘</a>
     </div>
     <table class="table" id="goodslist">
         <tr>
@@ -34,6 +36,8 @@
             <td>下载</td>
             <td>完成</td>
             <td style="width: 50px">磁力</td>
+            <td>确认</td>
+            <td>设置</td>
         </tr>
         <tr th:each="goods,goodsStat : ${goodsList}">
             <td th:text="${goods.fanHao}"></td>
@@ -45,6 +49,8 @@
             <td th:text="${goods.downCnt}"></td>
             <td th:text="${goods.finCnt}"></td>
             <td style="width: 50px"><a th:href="${goods.magnetLink}">磁力</a></td>
+            <td th:text="${goods.isViewed}"></td>
+            <td><a th:href="@{~/change(banGo=${goods.fanHao})}">修改</a></td>
         </tr>
     </table>
 </div>

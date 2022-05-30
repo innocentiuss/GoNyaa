@@ -3,7 +3,9 @@ package com.bubble.gonyaa.controller;
 
 
 import com.bubble.gonyaa.model.VideoInfoVo;
+import com.bubble.gonyaa.service.CacheService;
 import com.bubble.gonyaa.service.InformationService;
+import com.bubble.gonyaa.service.MemoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,9 +23,12 @@ public class MainController {
 
     @Autowired
     private ThymeleafViewResolver thymeleafViewResolver;
-
     @Autowired
     private InformationService informationService;
+    @Autowired
+    private MemoryService memoryService;
+    @Autowired
+    private CacheService cacheService;
 
     @GetMapping("/list")
     public String getUrl(Model model, HttpServletRequest request, HttpServletResponse response,
@@ -38,6 +43,24 @@ public class MainController {
         model.addAttribute("goodsList", voList);
         WebContext webContext = new WebContext(request, response, request.getServletContext(), request.getLocale(), model.asMap());
         return thymeleafViewResolver.getTemplateEngine().process("ViewList", webContext);
+    }
+    @GetMapping("/save")
+    public String saveMemory() {
+        memoryService.save();
+        return "save ok";
+    }
+
+    @GetMapping("/refresh")
+    public String refreshCache() {
+        cacheService.refreshCache();
+        return "refresh ok";
+    }
+
+    @GetMapping("/change")
+    public String setBanGoViewed(@RequestParam String banGo) {
+        if (memoryService.isViewed(banGo)) memoryService.unsetViewed(banGo);
+        else memoryService.setViewed(banGo);
+        return "change ok";
     }
 
 }

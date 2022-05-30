@@ -13,4 +13,5 @@ public class VideoInfoVo {
     private String downCnt;
     private String finCnt;
     private String magnetLink;
+    private String isViewed;
 }

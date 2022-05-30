@@ -28,6 +28,10 @@ public class CacheService {
         }
     }
 
+    public void refreshCache() {
+        resultCache.clear();
+    }
+
     public boolean contains(String key) {
         lock.lock();
         try {
