@@ -14,6 +14,6 @@ Java: Offering web frontend and backend; Using HTTP to communicate with python c
 
 ##### Extra attention
 
-Update python flask ip/port info in `GoNyaa-Server/src/main/resources/application.properties` before using.
+Update python flask ip/port info, `MGSList.txt`&`memory.txt`(create them first) path info in `GoNyaa-Server/src/main/resources/application.properties` before using.
 
 You could update MGS Bango list in `MGSList.txt` at the same directory above.

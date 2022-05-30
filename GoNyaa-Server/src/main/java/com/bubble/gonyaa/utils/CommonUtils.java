@@ -1,6 +1,7 @@
 package com.bubble.gonyaa.utils;
 
 import cn.hutool.core.io.file.FileReader;
+import cn.hutool.setting.dialect.Props;
 import com.bubble.gonyaa.enums.Type;
 
 import java.util.Arrays;
@@ -11,7 +12,8 @@ public class CommonUtils {
 
     static Set<String> mgsSet = new HashSet<>();
     static {
-        String mgsListString = new FileReader("MGSList.txt").readString();
+        Props props = new Props("application.properties");
+        String mgsListString = new FileReader(props.getStr("mgslist.txt.path")).readString();
         String[] strings = mgsListString.split("\n");
         mgsSet.addAll(Arrays.asList(strings));
     }
