@@ -1,9 +1,9 @@
-package com.example.geturl.controller;
+package com.bubble.gonyaa.controller;
 
 
 
-import com.example.geturl.model.VideoInfoVo;
-import com.example.geturl.service.InformationService;
+import com.bubble.gonyaa.model.VideoInfoVo;
+import com.bubble.gonyaa.service.InformationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;

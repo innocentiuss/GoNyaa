@@ -1,7 +1,7 @@
-package com.example.geturl.utils;
+package com.bubble.gonyaa.utils;
 
 import cn.hutool.core.io.file.FileReader;
-import com.example.geturl.enums.Type;
+import com.bubble.gonyaa.enums.Type;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -1,12 +1,12 @@
-package com.example.geturl.service;
+package com.bubble.gonyaa.service;
 
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.example.geturl.model.VideoInfoVo;
-import com.example.geturl.model.VideoInformation;
-import com.example.geturl.utils.CommonUtils;
+import com.bubble.gonyaa.utils.CommonUtils;
+import com.bubble.gonyaa.model.VideoInfoVo;
+import com.bubble.gonyaa.model.VideoInformation;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
