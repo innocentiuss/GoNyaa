@@ -1,6 +1,5 @@
 package com.example.geturl.model;
 
-import com.example.geturl.enums.Type;
 import lombok.Data;
 
 @Data
