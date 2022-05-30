@@ -14,7 +14,8 @@ app.config['JSON_AS_ASCII'] = False
 @app.route('/app')
 def server():
     page = request.args.get('page')
-    full_text = requests.get("https://sukebei.nyaa.si/?s=seeders&o=desc&p=" + page).text
+    sort = request.args.get('sort')
+    full_text = requests.get("https://sukebei.nyaa.si/?s=" + sort + "&o=desc&p=" + page).text
     table_list_bs = BeautifulSoup(full_text, 'lxml').html.body.find_all('tbody')[0].contents
     table_list_bs = [i for i in table_list_bs if isinstance(i, Tag)]
     li = main_process(table_list_bs)

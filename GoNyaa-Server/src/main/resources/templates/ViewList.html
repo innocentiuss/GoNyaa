@@ -18,8 +18,10 @@
 <div class="panel panel-default">
     <div class="panel-heading">
         <span th:text="'当前第'+${curPage}+'页'"></span>
-        <a th:href="@{~/list(page=${prevPage})}">上一页</a>
-        <a th:href="@{~/list(page=${nextPage})}">下一页</a>
+        <a th:href="@{~/list(page=${prevPage},sort=${sort})}">上一页</a>
+        <a th:href="@{~/list(page=${nextPage},sort=${sort})}">下一页</a>
+        <a th:href="@{~/list(page=${curPage},sort='uploading')}">上传数排序</a>
+        <a th:href="@{~/list(page=${curPage},sort='downloading')}">下载数排序</a>
     </div>
     <table class="table" id="goodslist">
         <tr>

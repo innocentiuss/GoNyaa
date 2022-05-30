@@ -35,4 +35,10 @@ public class CommonUtils {
         return "https://www.mgstage.com/search/cSearch.php?search_word=" + fanHao + "/";
     }
 
+    public static String sortChange(String origin) {
+        if (origin.equals("downloading")) return "leechers";
+        if (origin.equals("uploading")) return "seeders";
+        return "downloads";
+    }
+
 }

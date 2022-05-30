@@ -26,8 +26,10 @@ public class InformationService {
     @Autowired
     private CacheService cacheService;
 
-    public List<VideoInformation> getInfos(String page) {
-        String body = HttpRequest.get("http://" + pythonFlaskIp + ":" + pythonFlaskPort + "/app?page=" + page).execute().body();
+    public List<VideoInformation> getInfos(String page, String sort) {
+        sort = CommonUtils.sortChange(sort);
+        String body = HttpRequest.get("http://" + pythonFlaskIp + ":" + pythonFlaskPort + "/app?page=" + page + "&sort=" + sort).execute().body();
+
         JSONArray jsonArray = JSON.parseArray(body);
         List<VideoInformation> list = new ArrayList<>();
         for (int i = 0; i < jsonArray.size(); i++) {
@@ -58,11 +60,11 @@ public class InformationService {
         return result;
     }
 
-    public List<VideoInfoVo> access(String page) {
+    public List<VideoInfoVo> access(String page, String sort) {
         if (cacheService.contains(page))
             return cacheService.get(page);
 
-        List<VideoInfoVo> voList = transToInfo(getInfos(page));
+        List<VideoInfoVo> voList = transToInfo(getInfos(page, sort));
         cacheService.put(page, voList);
         return voList;
     }

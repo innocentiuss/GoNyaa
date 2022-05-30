@@ -26,10 +26,13 @@ public class MainController {
     private InformationService informationService;
 
     @GetMapping("/list")
-    public String getUrl(Model model, HttpServletRequest request, HttpServletResponse response,@RequestParam(defaultValue = "1", required = false) String page) {
-        List<VideoInfoVo> voList = informationService.access(page);
+    public String getUrl(Model model, HttpServletRequest request, HttpServletResponse response,
+                         @RequestParam(defaultValue = "1", required = false) String page,
+                         @RequestParam(defaultValue = "downloading", required = false) String sort) {
+        List<VideoInfoVo> voList = informationService.access(page, sort);
         int curPage = Integer.parseInt(page);
         model.addAttribute("curPage", curPage);
+        model.addAttribute("sort", sort);
         model.addAttribute("nextPage", curPage + 1);
         model.addAttribute("prevPage", Math.max(curPage - 1, 1));
         model.addAttribute("goodsList", voList);
