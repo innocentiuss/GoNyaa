@@ -1,10 +1,10 @@
 Collecting data from nyaa and offering preview URL for each information which has Bango.
 
-### Environment
+### Dependency
 
 Python 3.9 with Flask, BeautifulSoup, requests
 
-Java: JDK11 with Maven
+Java: JDK11 using Maven
 
 ### Component
 
