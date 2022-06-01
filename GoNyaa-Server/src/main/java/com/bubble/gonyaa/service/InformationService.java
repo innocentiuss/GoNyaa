@@ -60,7 +60,7 @@ public class InformationService {
             BeanUtils.copyProperties(originInfo, vo);
             // 检查是否已经确认
             boolean flag = memoryService.isViewed(vo.getFanHao());
-            vo.setIsViewed(flag ? "T" : "F");
+            vo.setIsViewed(flag ? "√" : "×");
             result.add(vo);
         }
         return result;
