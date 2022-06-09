@@ -19,19 +19,27 @@ public class MemoryService {
 
     private final String memoryPath = new Props("application.properties").getStr("memory.txt.path");
 
+    private volatile boolean isModified;
+
     public MemoryService() {
         viewedSet = new HashSet<>();
         String memory = new FileReader(memoryPath).readString();
         viewedSet.addAll(Arrays.asList(memory.split(";")));
+        isModified = false;
     }
 
     public synchronized void save() {
+        if (!isModified) {
+            log.info("no change, skip save");
+            return;
+        }
         StringBuilder sb = new StringBuilder();
         for (String s : viewedSet) {
             sb.append(s).append(";");
         }
         FileWriter writer = new FileWriter(memoryPath);
         writer.write(sb.toString());
+        isModified = false;
         log.info("Save memory cache ok");
     }
 
@@ -42,9 +50,11 @@ public class MemoryService {
 
     public synchronized void setViewed(String banGo) {
         viewedSet.add(banGo);
+        isModified = true;
     }
 
     public synchronized void unsetViewed(String banGo) {
         viewedSet.remove(banGo);
+        isModified = true;
     }
 }
