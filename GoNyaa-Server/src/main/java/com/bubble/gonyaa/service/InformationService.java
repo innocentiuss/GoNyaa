@@ -25,6 +25,9 @@ public class InformationService {
     private String pythonFlaskPort;
 
     @Autowired
+    CommonUtils commonUtils;
+
+    @Autowired
     private CacheService cacheService;
     @Autowired
     private MemoryService memoryService;
@@ -46,7 +49,7 @@ public class InformationService {
             videoInformation.setSize(jsonObject.getString("size"));
             videoInformation.setTitle(Base64.decodeStr(jsonObject.getString("title")));  // base64 decode first
             videoInformation.setFinCnt(jsonObject.getString("downloaded"));
-            videoInformation.setType(CommonUtils.getTypeFromId(videoInformation.getFanHao()));
+            videoInformation.setType(commonUtils.getTypeFromId(videoInformation.getFanHao()));
             videoInformation.setViewLink(CommonUtils.getPreviewLink(videoInformation.getFanHao(), videoInformation.getType()));
             list.add(videoInformation);
         }

@@ -2,8 +2,9 @@ package com.bubble.gonyaa.service;
 
 import cn.hutool.core.io.file.FileReader;
 import cn.hutool.core.io.file.FileWriter;
-import cn.hutool.setting.dialect.Props;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -13,19 +14,16 @@ import java.util.Set;
 @Service
 // 读写缓存
 @Slf4j
-public class MemoryService {
+public class MemoryService implements InitializingBean {
 
-    private final Set<String> viewedSet;
+    private Set<String> viewedSet;
 
-    private final String memoryPath = new Props("application.properties").getStr("memory.txt.path");
+    @Value("${memory.txt.path}")
+    private String memoryPath;
 
     private volatile boolean isModified;
 
     public MemoryService() {
-        viewedSet = new HashSet<>();
-        String memory = new FileReader(memoryPath).readString();
-        viewedSet.addAll(Arrays.asList(memory.split(";")));
-        isModified = false;
     }
 
     public synchronized void save() {
@@ -56,5 +54,13 @@ public class MemoryService {
     public synchronized void unsetViewed(String banGo) {
         viewedSet.remove(banGo);
         isModified = true;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        viewedSet = new HashSet<>();
+        String memory = new FileReader(memoryPath).readString();
+        viewedSet.addAll(Arrays.asList(memory.split(";")));
+        isModified = false;
     }
 }

@@ -1,23 +1,24 @@
 package com.bubble.gonyaa.utils;
 
 import cn.hutool.core.io.file.FileReader;
-import cn.hutool.setting.dialect.Props;
 import com.bubble.gonyaa.enums.Type;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CommonUtils {
+@Service
+public class CommonUtils implements InitializingBean {
 
-    static Set<String> mgsSet = new HashSet<>();
-    static {
-        Props props = new Props("application.properties");
-        String mgsListString = new FileReader(props.getStr("mgslist.txt.path")).readString();
-        String[] strings = mgsListString.split("\n");
-        mgsSet.addAll(Arrays.asList(strings));
-    }
-    public static Type getTypeFromId(String fanHao) {
+    Set<String> mgsSet = new HashSet<>();
+
+    @Value("${mgslist.txt.path}")
+    private String mgsTxtPath;
+
+    public Type getTypeFromId(String fanHao) {
         if (fanHao.startsWith("FC2-PPV")) return Type.FC2;
         for (String s : mgsSet) {
             if (fanHao.startsWith(s)) return Type.Prestige;
@@ -43,4 +44,10 @@ public class CommonUtils {
         return "downloads";
     }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        String mgsListString = new FileReader(mgsTxtPath).readString();
+        String[] strings = mgsListString.split("\n");
+        mgsSet.addAll(Arrays.asList(strings));
+    }
 }
