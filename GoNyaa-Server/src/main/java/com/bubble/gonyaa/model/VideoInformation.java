@@ -1,9 +1,11 @@
 package com.bubble.gonyaa.model;
 
 import com.bubble.gonyaa.enums.Type;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class VideoInformation {
     private String fanHao;
     private String viewLink;

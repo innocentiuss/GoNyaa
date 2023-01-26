@@ -1,12 +1,14 @@
 package com.bubble.gonyaa.service;
 
-import cn.hutool.core.io.file.FileReader;
-import cn.hutool.core.io.file.FileWriter;
+import com.bubble.gonyaa.utils.FileProcessor;
 import lombok.extern.slf4j.Slf4j;
+
+
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,15 +20,15 @@ public class MemoryService implements InitializingBean {
 
     private Set<String> viewedSet;
 
-    @Value("${memory.txt.path}")
-    private String memoryPath;
+    @Value("${memory.txt.name}")
+    private String memoryFileName;
 
     private volatile boolean isModified;
 
     public MemoryService() {
     }
 
-    public synchronized void save() {
+    public synchronized void save() throws IOException {
         if (!isModified) {
             log.info("no change, skip save");
             return;
@@ -35,8 +37,7 @@ public class MemoryService implements InitializingBean {
         for (String s : viewedSet) {
             sb.append(s).append(";");
         }
-        FileWriter writer = new FileWriter(memoryPath);
-        writer.write(sb.toString());
+        FileProcessor.writeString2File(sb.toString(), memoryFileName);
         isModified = false;
         log.info("Save memory cache ok");
     }
@@ -59,7 +60,7 @@ public class MemoryService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         viewedSet = new HashSet<>();
-        String memory = new FileReader(memoryPath).readString();
+        String memory = FileProcessor.readTxt2String(memoryFileName, "memory.txt");
         viewedSet.addAll(Arrays.asList(memory.split(";")));
         isModified = false;
     }
