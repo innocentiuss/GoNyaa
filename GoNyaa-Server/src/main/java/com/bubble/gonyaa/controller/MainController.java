@@ -94,4 +94,15 @@ public class MainController {
         }
     }
 
+    @GetMapping("/api/search")
+    public String banGoSearch(@RequestParam String keyword) {
+        try {
+            String res = "";
+            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, res));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, e.getMessage()));
+        }
+    }
+
 }

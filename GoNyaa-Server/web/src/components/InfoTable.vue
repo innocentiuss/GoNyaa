@@ -107,12 +107,15 @@
           <el-table-column prop="upCnt" label="上传数" width="70"></el-table-column>
           <el-table-column prop="downCnt" label="下载数" width="70"></el-table-column>
           <el-table-column prop="finCnt" label="完成数" width="70"></el-table-column>
-          <el-table-column label="磁力" width="70">
+          <el-table-column label="磁力" width="100">
             <template #default="scope">
-              <el-button type="primary" @click="magnetDownload(scope.row.magnetLink)">
+              <el-button type="primary" @click="magnetDownload(scope.row.magnetLink)" circle>
                 <el-icon>
                   <Magnet/>
                 </el-icon>
+              </el-button>
+              <el-button type="primary" @click="copy2Clipboard(scope.row.magnetLink)" circle>
+                <el-icon><CopyDocument /></el-icon>
               </el-button>
             </template>
           </el-table-column>
@@ -348,6 +351,10 @@ export default defineComponent({
       })
     }
 
+    function copy2Clipboard(content: string) {
+      navigator.clipboard.writeText(content)
+    }
+
     const inputValue = ref('')
     const inputVisible = ref(false)
     const InputRef = ref<InstanceType<typeof ElInput>>()
@@ -380,7 +387,7 @@ export default defineComponent({
       handleViewed, magnetDownload, handleClose, inputValue, inputVisible,
       pageData, tableLoading, showInput, handleInputConfirm,
       Check, Close, autoSet, saveMgsList, openDialog,
-      activeIndex, currentPage, dialogVisible,
+      activeIndex, currentPage, dialogVisible,copy2Clipboard,
       handleMenuSelect, handleClearCache, handleSave, handlePageChange,
       input, viewChanging, mgsList, dialogSaveLoading
     }

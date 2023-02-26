@@ -31,7 +31,7 @@ public class MemoryService implements InitializingBean {
 
     public synchronized void save() {
         if (!isModified) {
-            log.info("no change, skip save");
+//            log.info("no change, skip save");
             return;
         }
 
