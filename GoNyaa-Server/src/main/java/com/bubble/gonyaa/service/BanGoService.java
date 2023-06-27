@@ -1,9 +1,8 @@
 package com.bubble.gonyaa.service;
 
 import com.bubble.gonyaa.enums.Type;
-import com.bubble.gonyaa.utils.FileProcessor;
+import com.bubble.gonyaa.repository.PersistenceService;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -13,8 +12,11 @@ public class BanGoService implements InitializingBean {
 
     Set<String> mgsSet = new HashSet<>();
 
-    @Value("${mgslist.txt.name}")
-    private String mgsTxtFilename;
+    private final PersistenceService persistenceService;
+
+    public BanGoService(PersistenceService persistenceService) {
+        this.persistenceService = persistenceService;
+    }
 
     public Type getTypeFromId(String fanHao) {
         if (fanHao.startsWith("FC2-PPV")) return Type.FC2;
@@ -52,7 +54,7 @@ public class BanGoService implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         mgsSet.clear();
-        String mgsListString = FileProcessor.readTxt2String(mgsTxtFilename, "MGSList.txt");
+        String mgsListString = persistenceService.loadList();
         String[] strings = mgsListString.split("\n");
         mgsSet.addAll(Arrays.asList(strings));
     }
@@ -61,12 +63,12 @@ public class BanGoService implements InitializingBean {
         return new ArrayList<>(mgsSet);
     }
 
-    public synchronized void saveList(List<String> mgsList) throws Exception {
+    public synchronized void saveList(List<String> mgsList) {
         StringBuilder toWrite = new StringBuilder();
         for (String s : mgsList) {
             toWrite.append(s).append("\n");
         }
-        FileProcessor.writeString2File(toWrite.toString(), mgsTxtFilename);
+        persistenceService.saveList(toWrite.toString());
         afterPropertiesSet();
     }
 }
