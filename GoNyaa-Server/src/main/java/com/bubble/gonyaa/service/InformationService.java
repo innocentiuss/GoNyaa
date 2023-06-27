@@ -26,9 +26,6 @@ public class InformationService {
 
     @Autowired
     BanGoService banGoService;
-
-    @Autowired
-    private CacheService cacheService;
     @Autowired
     private MemoryService memoryService;
 
@@ -74,20 +71,6 @@ public class InformationService {
         return result;
     }
 
-    @Deprecated
-    public List<VideoInfoVo> access(String page, String sort) {
-        if (cacheService.contains(page + sort)) {
-            List<VideoInfoVo> result = cacheService.get(page + sort);
-            // 对于view字段要重新判断一下
-            for (VideoInfoVo videoInfoVo : result) {
-                videoInfoVo.setIsViewed(memoryService.isViewed(videoInfoVo.getFanHao()) ? "√" : "×");
-            }
-            return result;
-        }
-        List<VideoInfoVo> voList = transToInfo(getInfos(page, sort));
-        cacheService.put(page + sort, voList);
-        return voList;
-    }
 
     public List<VideoInfoVo> getInfo(String page, String sort) {
         List<VideoInfoVo> res;
