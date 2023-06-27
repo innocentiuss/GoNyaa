@@ -1,7 +1,7 @@
 package com.bubble.gonyaa.service;
 
 import cn.hutool.cache.impl.TimedCache;
-import com.bubble.gonyaa.model.VideoInfoVo;
+import com.bubble.gonyaa.model.vo.VideoInfoVo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

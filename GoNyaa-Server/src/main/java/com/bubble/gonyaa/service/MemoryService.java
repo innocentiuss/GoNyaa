@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -20,6 +22,9 @@ public class MemoryService implements InitializingBean {
 
     private Set<String> viewedSet;
 
+    @Autowired
+    MongoTemplate mongoTemplate;
+
     @Value("${memory.txt.name}")
     private String memoryFileName;
 
@@ -33,6 +38,7 @@ public class MemoryService implements InitializingBean {
             log.info("no change, skip save");
             return;
         }
+
         StringBuilder sb = new StringBuilder();
         for (String s : viewedSet) {
             sb.append(s).append(";");

@@ -1,11 +1,12 @@
-package com.bubble.gonyaa.model;
+package com.bubble.gonyaa.model.vo;
 
+import com.bubble.gonyaa.model.dto.VideoExtraInfo;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class VideoInfoVo extends VideoExtraInfo{
+public class VideoInfoVo extends VideoExtraInfo {
     private String fanHao;
     private String viewLink;
     private String size;

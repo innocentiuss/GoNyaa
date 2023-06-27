@@ -8,11 +8,11 @@
         <version>2.6.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.example</groupId>
+    <groupId>dev.szncu</groupId>
     <artifactId>GoNyaa</artifactId>
-    <version>1.0.1-Beta</version>
+    <version>1.1.0-Beta</version>
     <name>GoNyaa</name>
-    <description>Demo project for Spring Boot</description>
+    <description>Offering preview from nyaa</description>
     <properties>
         <java.version>11</java.version>
     </properties>
@@ -22,13 +22,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>1.2.54</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>

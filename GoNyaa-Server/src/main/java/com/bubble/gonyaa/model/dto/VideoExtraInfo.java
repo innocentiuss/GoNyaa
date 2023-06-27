@@ -1,4 +1,4 @@
-package com.bubble.gonyaa.model;
+package com.bubble.gonyaa.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package com.bubble.gonyaa.model;
+package com.bubble.gonyaa.model.dto;
 
 import com.bubble.gonyaa.enums.Type;
 import lombok.Getter;
