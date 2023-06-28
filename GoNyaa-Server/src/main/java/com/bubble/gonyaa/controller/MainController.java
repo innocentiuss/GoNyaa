@@ -6,7 +6,6 @@ import com.alibaba.fastjson.JSON;
 import com.bubble.gonyaa.model.vo.TableDataVo;
 import com.bubble.gonyaa.model.vo.VideoInfoVo;
 import com.bubble.gonyaa.model.vo.WebResponse;
-import com.bubble.gonyaa.repository.MongoService;
 import com.bubble.gonyaa.service.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -89,28 +88,6 @@ public class MainController {
         try {
             banGoService.saveList(mgsList);
             return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "add ok"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, e.getMessage()));
-        }
-    }
-
-    @GetMapping("/api/sync/memory/mongo")
-    public String syncMemory2Mongo() {
-        try {
-            memoryService.syncFile2Mongo();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "sync ok"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, e.getMessage()));
-        }
-    }
-
-    @GetMapping("/api/sync/list/mongo")
-    public String syncList2Mongo() {
-        try {
-            memoryService.syncList2Mongo();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "sync ok"));
         } catch (Exception e) {
             e.printStackTrace();
             return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, e.getMessage()));
