@@ -1,6 +1,5 @@
 package com.bubble.gonyaa.service;
 
-import com.bubble.gonyaa.repository.MongoService;
 import com.bubble.gonyaa.repository.PersistenceService;
 import lombok.extern.slf4j.Slf4j;
 
