@@ -24,6 +24,19 @@ def server():
     return jsonify(li)
 
 
+@app.route('/search')
+def search_api():
+    page = request.args.get('page')
+    sort = request.args.get('sort')
+    keyword = request.args.get('keyword')
+    full_text = requests.get("https://sukebei.nyaa.si/?s=" + sort + "&o=desc&p=" + page + "&q=" + keyword).text
+    table_list_bs = BeautifulSoup(full_text, 'lxml').html.body.find_all('tbody')[0].contents
+    table_list_bs = [i for i in table_list_bs if isinstance(i, Tag)]
+    li = main_process(table_list_bs)
+    li = [i.get_dict() for i in li]
+    return jsonify(li)
+
+
 class Result:
     def __init__(self, id, title, size, magnet_url, upload_time, upload_cnt, download_cnt, downloaded):
         self.id = id
@@ -81,4 +94,4 @@ def get_other_inf(tr):
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0')
+    app.run('0.0.0.0', port=5001)
