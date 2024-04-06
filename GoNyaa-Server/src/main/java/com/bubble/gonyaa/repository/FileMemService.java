@@ -1,13 +1,14 @@
 package com.bubble.gonyaa.repository;
 
 import com.bubble.gonyaa.utils.FileProcessor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
 @Service
+@Slf4j
 public class FileMemService implements PersistenceService{
 
     @Value("${memory.txt.name}")
@@ -30,7 +31,7 @@ public class FileMemService implements PersistenceService{
         try {
             FileProcessor.writeString2File(content, MEMORY_FILE_NAME);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.info(e.toString());
             throw new RuntimeException("writing memory file error");
         }
     }
@@ -40,7 +41,7 @@ public class FileMemService implements PersistenceService{
         try {
             FileProcessor.writeString2File(content, MGS_TEXT_FILE_NAME);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.info(e.toString());
             throw new RuntimeException("writing mgs list file error");
         }
     }
