@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TableDataVo {
-    private List<VideoInfoVo> voList;
+public class WebTableDataVo {
+    private List<VideoInfoItemVo> voList;
     private int page;
 }

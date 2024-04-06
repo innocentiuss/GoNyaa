@@ -5,7 +5,8 @@ import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.bubble.gonyaa.model.vo.VideoInfoVo;
+import com.bubble.gonyaa.model.dto.CrawlerResponseItem;
+import com.bubble.gonyaa.model.vo.VideoInfoItemVo;
 import com.bubble.gonyaa.model.dto.VideoInformation;
 import com.bubble.gonyaa.utils.TimedCache;
 import org.springframework.beans.BeanUtils;
@@ -19,21 +20,22 @@ import java.util.List;
 @Service
 public class InformationService {
 
-    @Value("${python.flask.ip}")
-    private String pythonFlaskIp;
-    @Value("${python.flask.port}")
-    private String pythonFlaskPort;
+    @Value("${backend.ip}")
+    private String backendIp;
+    @Value("${backend.port}")
+    private String backendPort;
 
     @Autowired
     BanGoService banGoService;
     @Autowired
     private MemoryService memoryService;
 
-    private final TimedCache<List<VideoInfoVo>> cache = new TimedCache<>();
+    private final TimedCache<List<VideoInfoItemVo>> cache = new TimedCache<>();
+    private final TimedCache<List<VideoInfoItemVo>> searchCache = new TimedCache<>();
 
-    public List<VideoInformation> getInfos(String page, String sort) {
+    public List<VideoInformation> doPullInfo(String page, String sort) {
         sort = BanGoService.sortChange(sort);
-        String body = HttpRequest.get("http://" + pythonFlaskIp + ":" + pythonFlaskPort + "/app?page=" + page + "&sort=" + sort).execute().body();
+        String body = HttpRequest.get("http://" + backendIp + ":" + backendPort + "/app?page=" + page + "&sort=" + sort).execute().body();
 
         JSONArray jsonArray = JSON.parseArray(body);
         List<VideoInformation> list = new ArrayList<>();
@@ -55,10 +57,36 @@ public class InformationService {
         return list;
     }
 
-    public List<VideoInfoVo> transToInfo(List<VideoInformation> originList) {
-        List<VideoInfoVo> result = new ArrayList<>();
+    public List<VideoInformation> doSearch(String keyword, String page, String sort) {
+        sort = BanGoService.sortChange(sort);
+        String body = HttpRequest.get("http://" + backendIp + ":" + backendPort + "/search?page=" + page + "&sort=" + sort + "&keyword=" + keyword).execute().body();
+        List<CrawlerResponseItem> response = JSON.parseArray(body, CrawlerResponseItem.class);
+        List<VideoInformation> informationList = new ArrayList<>();
+        for (CrawlerResponseItem crawlerResponseItem : response) {
+            informationList.add(extractInformation(crawlerResponseItem));
+        }
+        return informationList;
+    }
+
+    private VideoInformation extractInformation(CrawlerResponseItem response) {
+        VideoInformation information = new VideoInformation();
+        information.setDate(response.getUploadTime());
+        information.setFanHao(response.getId().toUpperCase());
+        information.setDownCnt(response.getDownloadCnt());
+        information.setUpCnt(response.getUploadCnt());
+        information.setMagnetLink(response.getMagnetUrl());
+        information.setSize(response.getSize());
+        information.setTitle(Base64.decodeStr(response.getTitle()));
+        information.setFinCnt(response.getDownloaded());
+        information.setType(banGoService.getTypeFromId(response.getId().toUpperCase()));
+        information.setViewLink(BanGoService.getPreviewLink(information.getFanHao(), information.getType()));
+        return information;
+    }
+
+    public List<VideoInfoItemVo> transToInfo(List<VideoInformation> originList) {
+        List<VideoInfoItemVo> result = new ArrayList<>();
         for (VideoInformation originInfo : originList) {
-            VideoInfoVo vo = new VideoInfoVo();
+            VideoInfoItemVo vo = new VideoInfoItemVo();
             BeanUtils.copyProperties(originInfo, vo);
             // 检查是否已经确认
             boolean flag = memoryService.isViewed(vo.getFanHao());
@@ -72,17 +100,30 @@ public class InformationService {
     }
 
 
-    public List<VideoInfoVo> getInfo(String page, String sort) {
-        List<VideoInfoVo> res;
+    public List<VideoInfoItemVo> getInfo(String page, String sort) {
+        List<VideoInfoItemVo> res;
         if ((res = cache.get(page + sort)) != null) {
-            for (VideoInfoVo videoInfoVo : res) {
-                videoInfoVo.setViewed(memoryService.isViewed(videoInfoVo.getFanHao()));
+            for (VideoInfoItemVo videoInfoItemVo : res) {
+                videoInfoItemVo.setViewed(memoryService.isViewed(videoInfoItemVo.getFanHao()));
             }
             return res;
         }
 
-        List<VideoInfoVo> voList = transToInfo(getInfos(page, sort));
+        List<VideoInfoItemVo> voList = transToInfo(doPullInfo(page, sort));
         cache.set(page + sort, voList);
+        return voList;
+    }
+
+    public List<VideoInfoItemVo> searchInfo(String page, String sort, String keyword) {
+        List<VideoInfoItemVo> res;
+        String key = page + sort + keyword;
+        if ((res = searchCache.get(key)) != null) {
+            for (VideoInfoItemVo videoInfoItemVo : res) {
+                videoInfoItemVo.setViewed(memoryService.isViewed(videoInfoItemVo.getFanHao()));
+            }
+        }
+        List<VideoInfoItemVo> voList = transToInfo(doSearch(keyword, page, sort));
+        cache.set(key, voList);
         return voList;
     }
 

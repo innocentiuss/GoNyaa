@@ -3,16 +3,19 @@ package com.bubble.gonyaa.controller;
 
 import cn.hutool.http.HttpStatus;
 import com.alibaba.fastjson.JSON;
-import com.bubble.gonyaa.model.vo.TableDataVo;
-import com.bubble.gonyaa.model.vo.VideoInfoVo;
+import com.bubble.gonyaa.model.vo.WebTableDataVo;
+import com.bubble.gonyaa.model.vo.VideoInfoItemVo;
 import com.bubble.gonyaa.model.vo.WebResponse;
 import com.bubble.gonyaa.service.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 
 import java.util.List;
 
 @RestController
+@Slf4j
+@RequestMapping("/api")
 public class MainController {
 
     private final InformationService informationService;
@@ -25,84 +28,51 @@ public class MainController {
         this.banGoService = banGoService;
     }
 
-    @GetMapping("/api/list")
+    @GetMapping("/list")
     public String getList(@RequestParam(defaultValue = "1", required = false) String page,
                           @RequestParam(defaultValue = "uploading", required = false) String sort) {
 
-        try {
-            List<VideoInfoVo> voList = informationService.getInfo(page, sort);
-            int curPage = Integer.parseInt(page);
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, new TableDataVo(voList, curPage)));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, e.getMessage()));
-        }
+        List<VideoInfoItemVo> voList = informationService.getInfo(page, sort);
+        int curPage = Integer.parseInt(page);
+        return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, new WebTableDataVo(voList, curPage)));
     }
 
-    @GetMapping("/api/change")
+    @GetMapping("/change")
     public String setViewed(@RequestParam String banGo) {
-        try {
-            if (memoryService.isViewed(banGo)) memoryService.unsetViewed(banGo);
-            else memoryService.setViewed(banGo);
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "change ok"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, "change error"));
-        }
+        if (memoryService.isViewed(banGo)) memoryService.unsetViewed(banGo);
+        else memoryService.setViewed(banGo);
+        return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "change ok"));
     }
 
-    @GetMapping("/api/clear")
+    @GetMapping("/clear")
     public String clearCache() {
-        try {
-            informationService.cleanCache();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "clear ok"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, "clear error"));
-        }
+        informationService.cleanCache();
+        return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "clear ok"));
     }
 
-    @GetMapping("/api/save")
+    @GetMapping("/save")
     public String saveMemoryAPI() {
-        try {
-            memoryService.save();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "save ok"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, "save error"));
-        }
+        memoryService.save();
+        return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "save ok"));
     }
 
-    @GetMapping("/api/getMGSList")
+    @GetMapping("/getMGSList")
     public String getMGSList() {
-        try {
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, banGoService.getMGSList()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, "get list error"));
-        }
+        return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, banGoService.getMGSList()));
     }
 
-    @PostMapping("/api/saveMGSList")
+    @PostMapping("/saveMGSList")
     public String addMGSBanGo(@RequestBody List<String> mgsList) {
-        try {
-            banGoService.saveList(mgsList);
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "add ok"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, e.getMessage()));
-        }
+        banGoService.saveList(mgsList);
+        return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, "add ok"));
     }
 
-    @GetMapping("/api/search")
-    public String banGoSearch(@RequestParam String keyword) {
-        try {
-            String res = "";
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, res));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_INTERNAL_ERROR, e.getMessage()));
-        }
+    @GetMapping("/search")
+    public String searchList(@RequestParam(defaultValue = "1", required = false) String page,
+                             @RequestParam(defaultValue = "uploading", required = false) String sort,
+                             @RequestParam String keyword) {
+        List<VideoInfoItemVo> voList = informationService.searchInfo(page, sort, keyword);
+        int curPage = Integer.parseInt(page);
+        return JSON.toJSONString(new WebResponse<>(HttpStatus.HTTP_OK, new WebTableDataVo(voList, curPage)));
     }
-
 }

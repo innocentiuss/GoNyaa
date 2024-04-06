@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class VideoInfoVo extends VideoExtraInfo {
+public class VideoInfoItemVo extends VideoExtraInfo {
     private String fanHao;
     private String viewLink;
     private String size;
