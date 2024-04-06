@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import java.util.Collections;
+import java.util.*;
 
 @SpringBootApplication(exclude = {MongoAutoConfiguration.class})
 @EnableScheduling
@@ -15,6 +15,7 @@ public class GetUrlApplication {
         SpringApplication application = new SpringApplication(GetUrlApplication.class);
         application.setDefaultProperties(Collections.singletonMap("spring.config.name", "config,application-default"));
         application.run(args);
+
     }
 
 }

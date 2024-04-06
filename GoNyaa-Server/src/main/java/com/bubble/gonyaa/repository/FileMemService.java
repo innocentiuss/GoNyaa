@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 
 @Service
-@ConditionalOnProperty(name = "data.save.mode", havingValue = "file")
 public class FileMemService implements PersistenceService{
 
     @Value("${memory.txt.name}")
