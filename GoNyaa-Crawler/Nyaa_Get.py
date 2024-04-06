@@ -16,7 +16,7 @@ app.config['JSON_AS_ASCII'] = False
 def server():
     page = request.args.get('page')
     sort = request.args.get('sort')
-    full_text = requests.get("https://sukebei.nyaa.si/?s=" + sort + "&o=desc&p=" + page).text
+    full_text = requests.get("https://sukebei.nyaa.si/?s=" + sort + "&o=desc&c=2_2&p=" + page).text
     table_list_bs = BeautifulSoup(full_text, 'lxml').html.body.find_all('tbody')[0].contents
     table_list_bs = [i for i in table_list_bs if isinstance(i, Tag)]
     li = main_process(table_list_bs)
@@ -29,7 +29,7 @@ def search_api():
     page = request.args.get('page')
     sort = request.args.get('sort')
     keyword = request.args.get('keyword')
-    full_text = requests.get("https://sukebei.nyaa.si/?s=" + sort + "&o=desc&p=" + page + "&q=" + keyword).text
+    full_text = requests.get("https://sukebei.nyaa.si/?s=" + sort + "&o=desc&c=2_2&p=" + page + "&q=" + keyword).text
     table_list_bs = BeautifulSoup(full_text, 'lxml').html.body.find_all('tbody')[0].contents
     table_list_bs = [i for i in table_list_bs if isinstance(i, Tag)]
     li = main_process(table_list_bs)
@@ -89,7 +89,7 @@ def get_title_from_full_title(full_title, fan_hao):
 # 分别为大小、时间、上传数、下载数、完成数、磁力链接
 def get_other_inf(tr):
     td_list = tr.find_all(class_='text-center')
-    mag_link = td_list[0].find_all('a')[1].get('href')
+    mag_link = td_list[0].find_all('a')[-1].get('href')
     return td_list[1].string, td_list[2].string, td_list[3].string, td_list[4].string, td_list[5].string, mag_link
 
 
