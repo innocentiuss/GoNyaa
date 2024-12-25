@@ -20,6 +20,31 @@ export async function getData(sort: string, page: number): Promise<WebResponse<T
     }
 }
 
+export async function searchData(sort: string, page: number, keyword: string) {
+    try {
+        const response = await axios.get('http://' + host + ':' + port + '/api/search', {
+            params: {
+                page: page,
+                sort: sort,
+                keyword: keyword
+            }
+        })
+        return response.data
+    } catch(e) {
+        console.log(e)
+        throw e
+    }
+}
+
+export function magnetDownload(url: string) {
+    // window.open(url)
+    // window.open(url, '_blank')
+    window.location.assign(url)
+}
+export function copy2Clipboard(content: string) {
+    navigator.clipboard.writeText(content)
+}
+
 export async function changeViewed(banGo: string) {
     try {
         const response = await axios.get('http://' + host + ':' + port + '/api/change',

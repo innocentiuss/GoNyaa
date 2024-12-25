@@ -9,6 +9,7 @@
       >
         <el-menu-item index="1">实时上传数排序</el-menu-item>
         <el-menu-item index="2">实时下载数排序</el-menu-item>
+        <el-button style="margin-left: 10px; margin-top: 10px" @click="toSearchPage">进入搜索页</el-button>
         <el-switch v-model="autoSet"
                    style="--el-switch-on-color: #13ce66; margin-top: 10px;margin-left: auto"
                    inline-prompt
@@ -168,6 +169,7 @@ import {changeViewed, clearCache, getData, getMGSList, saveMemory, saveMGSList} 
 import {VideoInfo} from "@/components/CommonTypes";
 import {Check, Close} from '@element-plus/icons-vue'
 import {ElInput, ElNotification} from 'element-plus'
+import router from '@/router';
 
 export default defineComponent({
   setup() {
@@ -381,6 +383,11 @@ export default defineComponent({
       inputVisible.value = false
       inputValue.value = ''
     }
+
+    function toSearchPage() {
+      router.push('/search')
+    }
+
     initData()
 
     return {
@@ -389,7 +396,7 @@ export default defineComponent({
       Check, Close, autoSet, saveMgsList, openDialog,
       activeIndex, currentPage, dialogVisible,copy2Clipboard,
       handleMenuSelect, handleClearCache, handleSave, handlePageChange,
-      input, viewChanging, mgsList, dialogSaveLoading
+      input, viewChanging, mgsList, dialogSaveLoading,toSearchPage
     }
   }
 });

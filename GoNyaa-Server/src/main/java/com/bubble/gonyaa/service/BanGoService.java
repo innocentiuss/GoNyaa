@@ -38,11 +38,11 @@ public class BanGoService implements InitializingBean {
     }
 
     public static String getJavBeeLink(String fanHao) {
-        return "http://javbee.org/search?keyword=" + fanHao;
+        return "https://javbee.org/search?keyword=" + fanHao;
     }
 
     public static String getJavStoreLink(String fanhao) {
-        return "http://javstore.net/search/" + fanhao + ".html";
+        return "https://javstore.net/search/" + fanhao + ".html";
     }
 
     public static String sortChange(String origin) {
