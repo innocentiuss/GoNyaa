@@ -41,6 +41,10 @@ public class BanGoService implements InitializingBean {
         return "https://javbee.org/search?keyword=" + fanHao;
     }
 
+    public static String getJavArchiveLink(String fanHao) {
+        return "https://javarchive.com/#gsc.tab=0&gsc.q=" + fanHao;
+    }
+
     public static String getJavStoreLink(String fanhao) {
         return "https://javstore.net/search/" + fanhao + ".html";
     }

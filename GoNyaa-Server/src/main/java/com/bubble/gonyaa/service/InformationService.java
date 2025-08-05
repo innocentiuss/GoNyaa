@@ -93,7 +93,7 @@ public class InformationService {
             vo.setIsViewed(flag ? "√" : "×");
             vo.setViewed(flag);
             vo.setViewLink2(BanGoService.getJavStoreLink(originInfo.getFanHao()));
-            vo.setViewLink3(BanGoService.getJavBeeLink(originInfo.getFanHao()));
+            vo.setViewLink3(BanGoService.getJavArchiveLink(originInfo.getFanHao()));
             result.add(vo);
         }
         return result;
