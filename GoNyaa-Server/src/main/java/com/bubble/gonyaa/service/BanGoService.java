@@ -46,7 +46,7 @@ public class BanGoService implements InitializingBean {
     }
 
     public static String getJavStoreLink(String fanhao) {
-        return "https://javstore.net/search/" + fanhao + ".html";
+        return "https://javstore.net/search?q=" + fanhao;
     }
 
     public static String sortChange(String origin) {
