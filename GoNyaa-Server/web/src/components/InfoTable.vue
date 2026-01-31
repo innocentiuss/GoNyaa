@@ -1,92 +1,98 @@
 <template>
   <el-container>
-    <el-header>
-      <el-menu
-          :default-active="activeIndex"
-          class="el-menu-demo"
-          mode="horizontal"
-          @select="handleMenuSelect"
-      >
-        <el-menu-item index="1">实时上传数排序</el-menu-item>
-        <el-menu-item index="2">实时下载数排序</el-menu-item>
-        <el-button style="margin-left: 10px; margin-top: 10px" @click="toSearchPage">进入搜索页</el-button>
-        <el-switch v-model="autoSet"
-                   style="--el-switch-on-color: #13ce66; margin-top: 10px;margin-left: auto"
-                   inline-prompt
-                   active-text="自动已阅"
-                   inactive-text="自动已阅"
-        />
-        <el-button
-            type="info"
-            style="margin-left: 10px; margin-top: 10px"
-            plain
-            @click="openDialog"
-            :loading="tableLoading"
-        >
-          <el-icon>
-            <Setting/>
-          </el-icon>
-          设置
-        </el-button>
-        <div style="width: 10px"></div>
-        <el-button type="success" plain style="margin-top: 10px;" @click="handleSave" :loading="tableLoading">
-          <el-icon>
-            <UploadFilled/>
-          </el-icon>
-          手动保存
-        </el-button>
-        <el-button type="warning" plain style="margin-top: 10px" @click="handleClearCache" :loading="tableLoading">
-          <el-icon>
-            <Refresh/>
-          </el-icon>
-          清除缓存
-        </el-button>
-        <div style="width: 10px"></div>
-        <!-- 筛选控件 -->
-        <el-divider direction="vertical" style="margin-top: 10px" />
-        <el-radio-group v-model="filters.viewed" size="small" style="margin-top: 10px">
-          <el-radio-button label="all">全部</el-radio-button>
-          <el-radio-button label="unviewed">仅未阅</el-radio-button>
-          <el-radio-button label="viewed">仅已阅</el-radio-button>
-        </el-radio-group>
-        <el-divider direction="vertical" style="margin-top: 10px" />
-        <el-radio-group v-model="filters.fc2" size="small" style="margin-top: 10px">
-          <el-radio-button label="all">全部</el-radio-button>
-          <el-radio-button label="only">仅FC2</el-radio-button>
-          <el-radio-button label="exclude">不看FC2</el-radio-button>
-        </el-radio-group>
-        <el-tag v-if="hasFilter" size="small" type="info" style="margin-top: 14px">
-          {{ filteredData.length }} / {{ pageData.arr.length }}
-        </el-tag>
-        <el-button
-            v-if="hasFilter"
-            type="primary"
-            link
-            size="small"
-            style="margin-top: 10px"
-            @click="resetFilters"
-        >
-          重置筛选
-        </el-button>
+    <el-header style="height: auto; padding: 10px;">
+      <!-- 操作栏 -->
+      <el-card shadow="hover" :body-style="{ padding: '10px' }" style="margin-bottom: 10px">
+        <div class="toolbar-row">
+          <el-button :icon="HomeFilled" circle @click="refreshPage" title="刷新"/>
 
-        <div style="width: 20px"></div>
-        <el-tag class="ml-2" style=" margin-top:14px">第{{ currentPage }}页</el-tag>
-        <div style="width: 10px"></div>
-        <el-button-group style=" margin-top:10px">
-          <el-button type="primary" :loading="tableLoading" @click="handlePageChange(-1)">
-            <el-icon class="el-icon--left">
-              <ArrowLeft/>
-            </el-icon>
-            上一页
+          <el-divider direction="vertical"/>
+
+          <el-radio-group v-model="sortBy" @change="handleSortChange">
+            <el-radio-button label="uploading">
+              <el-icon><SortUp/></el-icon> 上传数
+            </el-radio-button>
+            <el-radio-button label="downloading">
+              <el-icon><SortDown/></el-icon> 下载数
+            </el-radio-button>
+          </el-radio-group>
+
+          <el-divider direction="vertical"/>
+
+          <el-button @click="toSearchPage">
+            <el-icon><Search/></el-icon> 搜索页
           </el-button>
-          <el-button type="primary" :loading="tableLoading" @click="handlePageChange(1)">
-            下一页
-            <el-icon class="el-icon--right">
-              <ArrowRight/>
-            </el-icon>
+
+          <el-switch
+              v-model="autoSet"
+              style="--el-switch-on-color: #13ce66"
+              inline-prompt
+              active-text="自动已阅"
+              inactive-text="自动已阅"
+          />
+
+          <div class="spacer"></div>
+
+          <el-button-group>
+            <el-button type="info" plain @click="openDialog" :loading="tableLoading" :icon="Setting"/>
+            <el-button type="success" plain @click="handleSave" :loading="tableLoading" :icon="UploadFilled"/>
+            <el-button type="warning" plain @click="handleClearCache" :loading="tableLoading" :icon="Refresh"/>
+          </el-button-group>
+        </div>
+      </el-card>
+
+      <!-- 筛选与分页栏 -->
+      <el-card shadow="never" :body-style="{ padding: '10px' }">
+        <div class="toolbar-row">
+          <div class="filter-group">
+            <span class="filter-label">已阅</span>
+            <el-radio-group v-model="filters.viewed" size="small">
+              <el-radio-button label="all">全部</el-radio-button>
+              <el-radio-button label="unviewed">未阅</el-radio-button>
+              <el-radio-button label="viewed">已阅</el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <el-divider direction="vertical"/>
+
+          <div class="filter-group">
+            <span class="filter-label">FC2</span>
+            <el-radio-group v-model="filters.fc2" size="small">
+              <el-radio-button label="all">全部</el-radio-button>
+              <el-radio-button label="only">仅FC2</el-radio-button>
+              <el-radio-button label="exclude">排除</el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <el-tag v-if="hasFilter" size="small" type="info" effect="plain" style="margin-left: 5px">
+            {{ filteredData.length }} / {{ pageData.arr.length }}
+          </el-tag>
+          <el-button
+              v-if="hasFilter"
+              type="primary"
+              link
+              size="small"
+              @click="resetFilters"
+          >
+            重置
           </el-button>
-        </el-button-group>
-      </el-menu>
+
+          <div class="spacer"></div>
+
+          <el-tag type="info" effect="plain">第 {{ currentPage }} 页</el-tag>
+          <el-button-group>
+            <el-button type="primary" :loading="tableLoading" @click="goToFirstPage" :disabled="currentPage === 1">
+              <el-icon><ArrowLeftBold/></el-icon>
+            </el-button>
+            <el-button type="primary" :loading="tableLoading" @click="handlePageChange(-1)" :disabled="currentPage === 1">
+              <el-icon><ArrowLeft/></el-icon>
+            </el-button>
+            <el-button type="primary" :loading="tableLoading" @click="handlePageChange(1)">
+              <el-icon><ArrowRight/></el-icon>
+            </el-button>
+          </el-button-group>
+        </div>
+      </el-card>
     </el-header>
     <el-main>
       <div v-loading="tableLoading">
@@ -103,7 +109,7 @@
               <el-switch v-model="scope.row.viewed"
                          :active-icon="Check"
                          inline-prompt
-                         @change="handleViewed(scope.$index, true)"
+                         @change="handleViewed(scope.row, true)"
                          :loading="viewChanging"
                          :inactive-icon="Close"/>
             </template>
@@ -117,18 +123,18 @@
                   type="primary"
                   :href="scope.row.viewLink"
                   target="_blank"
-                  @click.middle="handleViewed(scope.$index, false)"
-                  @click.left="handleViewed(scope.$index, false)">官方
+                  @click.middle="handleViewed(scope.row, false)"
+                  @click.left="handleViewed(scope.row, false)">官方
               </el-link>
               |
               <el-link type="primary" :href="scope.row.viewLink2" target="_blank"
-                       @click.middle="handleViewed(scope.$index, false)"
-                       @click.left="handleViewed(scope.$index, false)">第三方1
+                       @click.middle="handleViewed(scope.row, false)"
+                       @click.left="handleViewed(scope.row, false)">第三方1
               </el-link>
               |
               <el-link type="primary" :href="scope.row.viewLink3" target="_blank"
-                       @click.middle="handleViewed(scope.$index, false)"
-                       @click.left="handleViewed(scope.$index, false)">第三方2
+                       @click.middle="handleViewed(scope.row, false)"
+                       @click.left="handleViewed(scope.row, false)">第三方2
               </el-link>
             </template>
           </el-table-column>
@@ -195,7 +201,7 @@
 import {defineComponent, nextTick, reactive, ref, computed} from 'vue'
 import {changeViewed, clearCache, getData, getMGSList, saveMemory, saveMGSList} from "@/components/CommonFunctions";
 import {VideoInfo} from "@/components/CommonTypes";
-import {Check, Close} from '@element-plus/icons-vue'
+import {Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold} from '@element-plus/icons-vue'
 import {ElInput, ElNotification} from 'element-plus'
 import router from '@/router';
 
@@ -205,7 +211,6 @@ export default defineComponent({
     const sortBy = ref('uploading')
     const tableLoading = ref(true)
     const pageData = reactive<{ arr: Array<VideoInfo> }>({arr: []})
-    const activeIndex = ref('1')
     const input = ref('')
     const autoSet = ref(true)
     const viewChanging = ref(false)
@@ -213,14 +218,8 @@ export default defineComponent({
     const dialogVisible = ref(false)
     const dialogSaveLoading = ref(false)
 
-    const handleMenuSelect = (key: string, keyPath: string[]) => {
-      if (key == '1' && sortBy.value != 'uploading') {
-        sortBy.value = 'uploading'
-        initData()
-      } else if (key == '2' && sortBy.value != 'downloading') {
-        sortBy.value = 'downloading'
-        initData()
-      }
+    const handleSortChange = () => {
+      initData()
     }
 
     function magnetDownload(url: string) {
@@ -286,24 +285,27 @@ export default defineComponent({
       })
     }
 
-    function changeViewedLocal(banGo: string, passIndex: number) {
-      const item = pageData.arr.find((_, index) => index !== passIndex && _.fanHao === banGo)
-      if (item) item.viewed = !item.viewed
+    function changeViewedLocal(banGo: string) {
+      // 查找所有相同番号的项并同步状态（包括筛选后的数据）
+      pageData.arr.forEach(item => {
+        if (item.fanHao === banGo) {
+          item.viewed = !item.viewed
+        }
+      })
     }
 
-    function handleViewed(index: number, fromSwitch: boolean) {
+    function handleViewed(row: VideoInfo, fromSwitch: boolean) {
       viewChanging.value = true
       try {
         // 已经阅过的可以不改了
-        if (!fromSwitch && pageData.arr[index].viewed == true) return;
+        if (!fromSwitch && row.viewed == true) return;
         if (!fromSwitch && autoSet.value == false) return;
 
         // 发送请求修改服务端数据
-        changeViewed(pageData.arr[index].fanHao).then(res => {
+        changeViewed(row.fanHao).then(res => {
           if (res.code == 200) {
-            // 如果成功则修改前端开关 因为从按钮点的话 已经自动变值了 变所有值的时候需要跳过它
-            if (fromSwitch) changeViewedLocal(pageData.arr[index].fanHao, index)
-            else changeViewedLocal(pageData.arr[index].fanHao, -1)
+            // 如果成功则修改前端开关 因为从按钮点的话 已经自动变值了
+            changeViewedLocal(row.fanHao)
           } else {
             // 失败则提示
             ElNotification({
@@ -377,6 +379,24 @@ export default defineComponent({
       })
     }
 
+    function goToFirstPage() {
+      if (currentPage.value === 1) return
+      tableLoading.value = true
+      getData(sortBy.value, 1).then(res => {
+        if (res.code == 200) {
+          pageData.arr = res.msg.voList
+          currentPage.value = 1
+        } else {
+          ElNotification({
+            title: '返回首页失败',
+            message: '',
+            type: 'warning',
+          })
+        }
+        tableLoading.value = false
+      })
+    }
+
     function copy2Clipboard(content: string) {
       navigator.clipboard.writeText(content)
     }
@@ -410,6 +430,16 @@ export default defineComponent({
 
     function toSearchPage() {
       router.push('/search')
+    }
+
+    function refreshPage() {
+      initData()
+      ElNotification({
+        title: '刷新成功',
+        message: '数据已重新加载',
+        type: 'success',
+        duration: 1500
+      })
     }
 
     // 筛选状态 - 两个独立维度
@@ -450,16 +480,37 @@ export default defineComponent({
     return {
       handleViewed, magnetDownload, handleClose, inputValue, inputVisible,
       pageData, tableLoading, showInput, handleInputConfirm,
-      Check, Close, autoSet, saveMgsList, openDialog,
-      activeIndex, currentPage, dialogVisible,copy2Clipboard,
-      handleMenuSelect, handleClearCache, handleSave, handlePageChange,
+      Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold, autoSet, saveMgsList, openDialog,
+      currentPage, dialogVisible,copy2Clipboard,
+      handleSortChange, handleClearCache, handleSave, handlePageChange, refreshPage, goToFirstPage,
       input, viewChanging, mgsList, dialogSaveLoading,toSearchPage,
-      filters, hasFilter, resetFilters, filteredData
+      filters, hasFilter, resetFilters, filteredData, sortBy
     }
   }
 });
 </script>
 
 <style scoped>
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
+.spacer {
+  flex: 1;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 12px;
+  color: #606266;
+  white-space: nowrap;
+}
 </style>
