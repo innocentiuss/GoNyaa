@@ -318,8 +318,11 @@ export default defineComponent({
         // 发送请求修改服务端数据
         changeViewed(row.fanHao).then(res => {
           if (res.code == 200) {
-            // 同步所有相同番号项的状态（switch已自动改变当前行的viewed）
-            changeViewedLocal(row.fanHao, row.viewed)
+            // 同步所有相同番号项的状态
+            // 开关点击：Vue已自动改变row.viewed，使用当前值
+            // 链接点击：强制设为true（因为row.viewed还是false）
+            const newViewedValue = fromSwitch ? row.viewed : true
+            changeViewedLocal(row.fanHao, newViewedValue)
           } else {
             // 失败则提示
             ElNotification({
