@@ -10,7 +10,7 @@
     </parent>
     <groupId>dev.szncu</groupId>
     <artifactId>GoNyaa</artifactId>
-    <version>1.2.1-Beta</version>
+    <version>1.3.0</version>
     <name>GoNyaa</name>
     <description>Offering preview from nyaa</description>
     <properties>
