@@ -42,6 +42,34 @@
           清除缓存
         </el-button>
         <div style="width: 10px"></div>
+        <!-- 筛选控件 -->
+        <el-divider direction="vertical" style="margin-top: 10px" />
+        <el-radio-group v-model="filters.viewed" size="small" style="margin-top: 10px">
+          <el-radio-button label="all">全部</el-radio-button>
+          <el-radio-button label="unviewed">仅未阅</el-radio-button>
+          <el-radio-button label="viewed">仅已阅</el-radio-button>
+        </el-radio-group>
+        <el-divider direction="vertical" style="margin-top: 10px" />
+        <el-radio-group v-model="filters.fc2" size="small" style="margin-top: 10px">
+          <el-radio-button label="all">全部</el-radio-button>
+          <el-radio-button label="only">仅FC2</el-radio-button>
+          <el-radio-button label="exclude">不看FC2</el-radio-button>
+        </el-radio-group>
+        <el-tag v-if="hasFilter" size="small" type="info" style="margin-top: 14px">
+          {{ filteredData.length }} / {{ pageData.arr.length }}
+        </el-tag>
+        <el-button
+            v-if="hasFilter"
+            type="primary"
+            link
+            size="small"
+            style="margin-top: 10px"
+            @click="resetFilters"
+        >
+          重置筛选
+        </el-button>
+
+        <div style="width: 20px"></div>
         <el-tag class="ml-2" style=" margin-top:14px">第{{ currentPage }}页</el-tag>
         <div style="width: 10px"></div>
         <el-button-group style=" margin-top:10px">
@@ -68,7 +96,7 @@
           </el-col>
         </el-row>
         <el-backtop :right="100" :bottom="100"/>
-        <el-table :data="pageData.arr" stripe style="width: 100%"
+        <el-table :data="filteredData" stripe style="width: 100%"
                   table-layout="auto">
           <el-table-column label="已阅" width="65">
             <template #default="scope">
@@ -164,7 +192,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, nextTick, reactive, ref} from 'vue'
+import {defineComponent, nextTick, reactive, ref, computed} from 'vue'
 import {changeViewed, clearCache, getData, getMGSList, saveMemory, saveMGSList} from "@/components/CommonFunctions";
 import {VideoInfo} from "@/components/CommonTypes";
 import {Check, Close} from '@element-plus/icons-vue'
@@ -259,12 +287,8 @@ export default defineComponent({
     }
 
     function changeViewedLocal(banGo: string, passIndex: number) {
-      const deepCopy = JSON.parse(JSON.stringify(pageData.arr))
-      for (let i = 0; i < deepCopy.length; i++) {
-        if (i == passIndex) continue
-        if (deepCopy[i].fanHao == banGo) deepCopy[i].viewed = !deepCopy[i].viewed
-      }
-      pageData.arr = deepCopy
+      const item = pageData.arr.find((_, index) => index !== passIndex && _.fanHao === banGo)
+      if (item) item.viewed = !item.viewed
     }
 
     function handleViewed(index: number, fromSwitch: boolean) {
@@ -388,6 +412,39 @@ export default defineComponent({
       router.push('/search')
     }
 
+    // 筛选状态 - 两个独立维度
+    const filters = reactive({
+      viewed: 'all',   // 'all' | 'unviewed' | 'viewed'
+      fc2: 'all'       // 'all' | 'only' | 'exclude'
+    })
+
+    // 是否有筛选激活
+    const hasFilter = computed(() => {
+      return filters.viewed !== 'all' || filters.fc2 !== 'all'
+    })
+
+    // 重置筛选
+    const resetFilters = () => {
+      filters.viewed = 'all'
+      filters.fc2 = 'all'
+    }
+
+    // 组合筛选逻辑
+    const filteredData = computed(() => {
+      return pageData.arr.filter(row => {
+        // 维度1：已阅状态筛选
+        if (filters.viewed === 'unviewed' && row.viewed) return false
+        if (filters.viewed === 'viewed' && !row.viewed) return false
+
+        // 维度2：FC2筛选
+        const isFC2 = row.fanHao.toUpperCase().startsWith('FC2')
+        if (filters.fc2 === 'only' && !isFC2) return false
+        if (filters.fc2 === 'exclude' && isFC2) return false
+
+        return true
+      })
+    })
+
     initData()
 
     return {
@@ -396,7 +453,8 @@ export default defineComponent({
       Check, Close, autoSet, saveMgsList, openDialog,
       activeIndex, currentPage, dialogVisible,copy2Clipboard,
       handleMenuSelect, handleClearCache, handleSave, handlePageChange,
-      input, viewChanging, mgsList, dialogSaveLoading,toSearchPage
+      input, viewChanging, mgsList, dialogSaveLoading,toSearchPage,
+      filters, hasFilter, resetFilters, filteredData
     }
   }
 });

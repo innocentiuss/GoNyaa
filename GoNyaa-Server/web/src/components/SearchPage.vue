@@ -5,13 +5,13 @@
         <el-row>
           <el-col :span="8">
             <el-radio-group v-model="sort" @input="changeSortType">
-              <el-radio-button :disabled="loading" label="uploading"  :loading="loading">上传量顺序</el-radio-button>
-              <el-radio-button :disabled="loading" label="downloading"  :loading="loading" >下载量顺序</el-radio-button>
-              <el-radio-button :disabled="loading" label="finished"  :loading="loading" >完成量顺序</el-radio-button>
+              <el-radio-button :disabled="loading" label="uploading">上传量顺序</el-radio-button>
+              <el-radio-button :disabled="loading" label="downloading">下载量顺序</el-radio-button>
+              <el-radio-button :disabled="loading" label="finished">完成量顺序</el-radio-button>
             </el-radio-group>
           </el-col>
           <el-col :span="8">
-            <el-input v-model="keyword" prefix-icon="search" style="width: 80%" @keyup.enter="keywordSearch" clearable placeholder="输入搜索关键字" :disable="loading">
+            <el-input v-model="keyword" prefix-icon="search" style="width: 80%" @keyup.enter="keywordSearch" clearable placeholder="输入搜索关键字" :disabled="loading">
             </el-input>
             <el-button  icon="search" @click="keywordSearch"></el-button>
           </el-col>
@@ -100,6 +100,7 @@
 import router from '@/router';
 import { onMounted, ref, nextTick } from 'vue'
 import { searchData, magnetDownload, copy2Clipboard, changeViewed } from './CommonFunctions';
+import type { VideoInfo } from './CommonTypes';
 import { ElNotification } from 'element-plus';
 import {Check, Close} from '@element-plus/icons-vue'
 const keyword = ref('')
@@ -112,10 +113,8 @@ function backToInfoTable() {
 async function changeSortType() {
   if (loading.value) return;
   if (!keyword.value) return;
-  loading.value=true
-  setTimeout(() => {
-    search();
-  }, 200); 
+  loading.value = true
+  await search();
 }
 async function keywordSearch() {
   if (loading.value) {
@@ -196,14 +195,10 @@ async function handlePageChange(delta: number) {
 
 }
 function changeViewedLocal(banGo: string, passIndex: number) {
-      const deepCopy = JSON.parse(JSON.stringify(tableData.value))
-      for (let i = 0; i < deepCopy.length; i++) {
-        if (i == passIndex) continue
-        if (deepCopy[i].fanHao == banGo) deepCopy[i].viewed = !deepCopy[i].viewed
-      }
-      tableData.value = deepCopy
-    }
-const tableData: any = ref([])
+  const item = tableData.value.find((_, index) => index !== passIndex && _.fanHao === banGo)
+  if (item) item.viewed = !item.viewed
+}
+const tableData = ref<VideoInfo[]>([])
 
 </script>
 
