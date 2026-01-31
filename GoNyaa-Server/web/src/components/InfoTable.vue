@@ -79,6 +79,19 @@
 
           <div class="spacer"></div>
 
+          <el-dropdown @command="handleBatchView" size="small" split-button type="danger" :loading="batchViewing">
+            <el-icon><View/></el-icon> 批量检阅
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="official">官方</el-dropdown-item>
+                <el-dropdown-item command="third1">第三方1</el-dropdown-item>
+                <el-dropdown-item command="third2">第三方2</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
+          <el-divider direction="vertical"/>
+
           <el-tag type="info" effect="plain">第 {{ currentPage }} 页</el-tag>
           <el-button-group>
             <el-button type="primary" :loading="tableLoading" @click="goToFirstPage" :disabled="currentPage === 1">
@@ -201,7 +214,7 @@
 import {defineComponent, nextTick, reactive, ref, computed} from 'vue'
 import {changeViewed, clearCache, getData, getMGSList, saveMemory, saveMGSList} from "@/components/CommonFunctions";
 import {VideoInfo} from "@/components/CommonTypes";
-import {Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold} from '@element-plus/icons-vue'
+import {Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold, View} from '@element-plus/icons-vue'
 import {ElInput, ElNotification} from 'element-plus'
 import router from '@/router';
 
@@ -214,6 +227,7 @@ export default defineComponent({
     const input = ref('')
     const autoSet = ref(true)
     const viewChanging = ref(false)
+    const batchViewing = ref(false)
     const mgsList = reactive<{ arr: string[] }>({arr: []})
     const dialogVisible = ref(false)
     const dialogSaveLoading = ref(false)
@@ -285,11 +299,11 @@ export default defineComponent({
       })
     }
 
-    function changeViewedLocal(banGo: string) {
+    function changeViewedLocal(banGo: string, viewedValue: boolean) {
       // 查找所有相同番号的项并同步状态（包括筛选后的数据）
       pageData.arr.forEach(item => {
         if (item.fanHao === banGo) {
-          item.viewed = !item.viewed
+          item.viewed = viewedValue
         }
       })
     }
@@ -304,8 +318,8 @@ export default defineComponent({
         // 发送请求修改服务端数据
         changeViewed(row.fanHao).then(res => {
           if (res.code == 200) {
-            // 如果成功则修改前端开关 因为从按钮点的话 已经自动变值了
-            changeViewedLocal(row.fanHao)
+            // 同步所有相同番号项的状态（switch已自动改变当前行的viewed）
+            changeViewedLocal(row.fanHao, row.viewed)
           } else {
             // 失败则提示
             ElNotification({
@@ -397,6 +411,87 @@ export default defineComponent({
       })
     }
 
+    async function handleBatchView(command: string) {
+      const type = command as 'official' | 'third1' | 'third2'
+
+      // 获取当前筛选结果中未阅的项
+      const unviewed = filteredData.value.filter(row => !row.viewed)
+
+      if (unviewed.length === 0) {
+        ElNotification({
+          title: '提示',
+          message: '当前列表没有未阅项',
+          type: 'info'
+        })
+        return
+      }
+
+      // 限制数量，避免打开太多
+      const limit = 10
+      const toView = unviewed.slice(0, limit)
+
+      if (unviewed.length > limit) {
+        ElNotification({
+          title: '提示',
+          message: `当前有${unviewed.length}个未阅项，本次只处理前${limit}个`,
+          type: 'warning'
+        })
+      }
+
+      // 确定链接字段
+      const linkField: keyof VideoInfo = {
+        official: 'viewLink',
+        third1: 'viewLink2',
+        third2: 'viewLink3'
+      }[type] as keyof VideoInfo
+
+      batchViewing.value = true
+      let opened = 0
+      let failed = 0
+
+      for (const row of toView) {
+        try {
+          // 后台打开标签页
+          const newWindow = window.open(row[linkField] as string, '_blank')
+          if (newWindow) {
+            opened++
+            // 只有成功打开才标记已阅
+            if (!row.viewed) {
+              const res = await changeViewed(row.fanHao)
+              if (res.code === 200) {
+                row.viewed = true
+              }
+            }
+          } else {
+            // 被浏览器拦截，跳过已阅标记
+            failed++
+          }
+        } catch (e) {
+          console.error('批量检阅失败:', e)
+          failed++
+        }
+
+        // 小延迟，避免浏览器拦截
+        await new Promise(r => setTimeout(r, 200))
+      }
+
+      batchViewing.value = false
+
+      if (failed > 0) {
+        ElNotification({
+          title: '批量检阅完成',
+          message: `成功打开${opened}个页面并标记已阅，${failed}个被浏览器拦截`,
+          type: 'warning'
+        })
+      } else {
+        ElNotification({
+          title: '批量检阅完成',
+          message: `已打开${opened}个页面并标记已阅`,
+          type: 'success'
+        })
+      }
+    }
+
     function copy2Clipboard(content: string) {
       navigator.clipboard.writeText(content)
     }
@@ -480,10 +575,10 @@ export default defineComponent({
     return {
       handleViewed, magnetDownload, handleClose, inputValue, inputVisible,
       pageData, tableLoading, showInput, handleInputConfirm,
-      Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold, autoSet, saveMgsList, openDialog,
+      Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold, View, autoSet, saveMgsList, openDialog,
       currentPage, dialogVisible,copy2Clipboard,
-      handleSortChange, handleClearCache, handleSave, handlePageChange, refreshPage, goToFirstPage,
-      input, viewChanging, mgsList, dialogSaveLoading,toSearchPage,
+      handleSortChange, handleClearCache, handleSave, handlePageChange, refreshPage, goToFirstPage, handleBatchView,
+      input, viewChanging, mgsList, dialogSaveLoading,toSearchPage, batchViewing,
       filters, hasFilter, resetFilters, filteredData, sortBy
     }
   }
