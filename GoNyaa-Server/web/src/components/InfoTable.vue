@@ -34,9 +34,11 @@
           <div class="spacer"></div>
 
           <el-button-group>
-            <el-button type="info" plain @click="openDialog" :loading="tableLoading" :icon="Setting"/>
-            <el-button type="success" plain @click="handleSave" :loading="tableLoading" :icon="UploadFilled"/>
-            <el-button type="warning" plain @click="handleClearCache" :loading="tableLoading" :icon="Refresh"/>
+            <el-button type="info" plain @click="openDialog" :loading="tableLoading" :icon="Setting" title="MGStage番号配置"/>
+            <el-button type="success" plain @click="handleSave" :loading="tableLoading" :icon="UploadFilled" title="保存已阅状态"/>
+            <el-button type="warning" plain @click="handleClearCache" :loading="tableLoading" :icon="Refresh" title="清除缓存"/>
+            <el-button type="primary" plain @click="handleExport" :loading="tableLoading" :icon="Download" title="导出已阅列表"/>
+            <el-button type="danger" plain @click="openImportDialog" :loading="tableLoading" :icon="FolderAdd" title="导入已阅列表"/>
           </el-button-group>
         </div>
       </el-card>
@@ -206,15 +208,56 @@
       </span>
         </template>
       </el-dialog>
+
+      <!-- 导入已阅列表对话框 -->
+      <el-dialog
+          v-model="importDialogVisible"
+          title="导入已阅列表"
+          width="400px"
+      >
+        <el-form label-position="top">
+          <el-form-item label="导入模式">
+            <el-radio-group v-model="importMode">
+              <el-radio label="append">追加模式（保留现有数据）</el-radio>
+              <el-radio label="overwrite">覆盖模式（清空现有数据）</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="选择文件">
+            <el-upload
+                ref="uploadRef"
+                action="#"
+                :auto-upload="false"
+                :on-change="handleFileChange"
+                :limit="1"
+                accept=".txt"
+            >
+              <el-button type="primary">选择文件</el-button>
+              <template #tip>
+                <div class="el-upload__tip">
+                  请选择之前导出的 .txt 文件，支持分号或换行分隔的番号列表
+                </div>
+              </template>
+            </el-upload>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="importDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="handleImport" :loading="importLoading" :disabled="!selectedFile">
+              导入
+            </el-button>
+          </span>
+        </template>
+      </el-dialog>
     </el-main>
   </el-container>
 </template>
 
 <script lang="ts">
 import {defineComponent, nextTick, reactive, ref, computed} from 'vue'
-import {changeViewed, clearCache, getData, getMGSList, saveMemory, saveMGSList} from "@/components/CommonFunctions";
+import {changeViewed, clearCache, getData, getMGSList, saveMemory, saveMGSList, exportViewedFile, importViewedFile} from "@/components/CommonFunctions";
 import {VideoInfo} from "@/components/CommonTypes";
-import {Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold, View} from '@element-plus/icons-vue'
+import {Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold, View, Download, FolderAdd} from '@element-plus/icons-vue'
 import {ElInput, ElNotification} from 'element-plus'
 import router from '@/router';
 
@@ -503,6 +546,13 @@ export default defineComponent({
     const inputVisible = ref(false)
     const InputRef = ref<InstanceType<typeof ElInput>>()
 
+    // 导入对话框相关
+    const importDialogVisible = ref(false)
+    const importMode = ref<'append' | 'overwrite'>('append')
+    const importLoading = ref(false)
+    const selectedFile = ref<File | null>(null)
+    const uploadRef = ref<any>(null)
+
     const handleClose = (tag: string) => {
       const copy = JSON.parse(JSON.stringify(mgsList.arr))
       copy.splice(copy.indexOf(tag), 1)
@@ -528,6 +578,74 @@ export default defineComponent({
 
     function toSearchPage() {
       router.push('/search')
+    }
+
+    // 导出已阅列表
+    function handleExport() {
+      exportViewedFile()
+      ElNotification({
+        title: '导出成功',
+        message: '已阅列表已开始下载',
+        type: 'success',
+      })
+    }
+
+    // 打开导入对话框
+    function openImportDialog() {
+      importDialogVisible.value = true
+      selectedFile.value = null
+      importMode.value = 'append'
+    }
+
+    // 文件选择变化
+    function handleFileChange(uploadFile: any) {
+      selectedFile.value = uploadFile.raw
+    }
+
+    // 执行导入
+    async function handleImport() {
+      if (!selectedFile.value) {
+        ElNotification({
+          title: '请选择文件',
+          message: '',
+          type: 'warning',
+        })
+        return
+      }
+
+      importLoading.value = true
+      try {
+        const res = await importViewedFile(selectedFile.value, importMode.value)
+        if (res.code === 200) {
+          ElNotification({
+            title: '导入成功',
+            message: res.msg,
+            type: 'success',
+          })
+          importDialogVisible.value = false
+          // 刷新页面数据以反映新的已阅状态
+          initData()
+        } else {
+          ElNotification({
+            title: '导入失败',
+            message: res.msg,
+            type: 'error',
+          })
+        }
+      } catch (e) {
+        ElNotification({
+          title: '导入失败',
+          message: '请检查文件格式是否正确',
+          type: 'error',
+        })
+      } finally {
+        importLoading.value = false
+        // 清空文件列表
+        if (uploadRef.value) {
+          uploadRef.value.clearFiles()
+        }
+        selectedFile.value = null
+      }
     }
 
     function refreshPage() {
@@ -578,11 +696,15 @@ export default defineComponent({
     return {
       handleViewed, magnetDownload, handleClose, inputValue, inputVisible,
       pageData, tableLoading, showInput, handleInputConfirm,
-      Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold, View, autoSet, saveMgsList, openDialog,
+      Check, Close, SortUp, SortDown, Search, Setting, UploadFilled, Refresh, HomeFilled, ArrowLeftBold, View, Download, FolderAdd,
+      autoSet, saveMgsList, openDialog,
       currentPage, dialogVisible,copy2Clipboard,
       handleSortChange, handleClearCache, handleSave, handlePageChange, refreshPage, goToFirstPage, handleBatchView,
       input, viewChanging, mgsList, dialogSaveLoading,toSearchPage, batchViewing,
-      filters, hasFilter, resetFilters, filteredData, sortBy
+      filters, hasFilter, resetFilters, filteredData, sortBy,
+      // 导入导出
+      importDialogVisible, importMode, importLoading, selectedFile, uploadRef,
+      handleExport, openImportDialog, handleFileChange, handleImport
     }
   }
 });

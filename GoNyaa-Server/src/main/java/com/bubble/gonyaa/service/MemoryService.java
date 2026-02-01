@@ -8,8 +8,10 @@ import org.springframework.beans.factory.InitializingBean;
 
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -66,5 +68,37 @@ public class MemoryService implements InitializingBean {
         String memory = persistenceService.loadMemory();
         viewedSet.addAll(Arrays.asList(memory.split(";")));
         isModified = false;
+    }
+
+    /**
+     * 获取已阅列表（用于导出）
+     */
+    public synchronized List<String> getViewedList() {
+        return new ArrayList<>(viewedSet);
+    }
+
+    /**
+     * 导入已阅列表
+     * @param banGoList 要导入的番号列表
+     * @param append true为追加模式，false为覆盖模式
+     * @return 导入成功的数量
+     */
+    public synchronized int importViewedList(List<String> banGoList, boolean append) {
+        if (!append) {
+            // 覆盖模式：清空现有数据
+            viewedSet.clear();
+        }
+        int beforeSize = viewedSet.size();
+        for (String banGo : banGoList) {
+            if (banGo != null && !banGo.trim().isEmpty()) {
+                viewedSet.add(banGo.trim());
+            }
+        }
+        int addedCount = viewedSet.size() - beforeSize;
+        if (addedCount > 0 || !append) {
+            isModified = true;
+        }
+        log.info("Imported {} items into viewedSet (mode: {}), total: {}", addedCount, append ? "append" : "overwrite", viewedSet.size());
+        return addedCount;
     }
 }

@@ -96,3 +96,39 @@ export async function getMGSList() {
     }
 }
 
+/**
+ * 导出已阅列表为文件
+ */
+export function exportViewedFile() {
+    // 使用a标签触发下载
+    const link = document.createElement('a')
+    link.href = 'http://' + host + ':' + port + '/api/exportViewed'
+    link.download = ''  // 文件名由服务端设置
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+}
+
+/**
+ * 导入已阅列表文件
+ * @param file 要上传的文件
+ * @param mode 导入模式：append(追加) 或 overwrite(覆盖)
+ */
+export async function importViewedFile(file: File, mode: 'append' | 'overwrite' = 'append'): Promise<WebResponse<string>> {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('mode', mode)
+
+    try {
+        const response = await axios.post('http://' + host + ':' + port + '/api/importViewed', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+        return response.data
+    } catch (e) {
+        console.log(e)
+        throw e
+    }
+}
+
