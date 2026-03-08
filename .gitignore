@@ -1,1 +1,9 @@
 /.idea
+node_modules
+.claude/settings.local.json
+GoNyaa-Desktop/dist/
+GoNyaa-Desktop/src-tauri/target/
+GoNyaa-Desktop/src-tauri/gen/
+AGENTS.md
+GEMINI.md
+migration_plan.md
