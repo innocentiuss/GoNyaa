@@ -1,13 +1,10 @@
 ﻿<template>
   <div class="page-shell">
-    <div class="page-header">
-      <div>
-        <h1>Search</h1>
-        <p>Search now goes through Tauri commands instead of the local Spring Boot port.</p>
-      </div>
+    <div class="page-header" style="align-items: center;">
+      <h1 style="margin: 0;">Search</h1>
       <el-space wrap>
-        <el-button :icon="Setting" @click="openCrawlerDialog(false)">Crawler Settings</el-button>
         <el-button :icon="House" @click="router.push('/')">Back Home</el-button>
+        <el-button :icon="Setting" @click="openCrawlerDialog(false)">Crawler</el-button>
       </el-space>
     </div>
 
@@ -23,6 +20,7 @@
           v-model="keyword"
           clearable
           placeholder="Type a keyword and press Enter"
+          style="width: 300px;"
           @keyup.enter="handleSearch"
         />
 
@@ -102,10 +100,6 @@ async function loadAppInfo() {
     const response = await desktopApi.getAppInfo()
     appInfo.value = response.msg
     crawlerBaseUrlDraft.value = response.msg.crawlerBaseUrl
-
-    if (!response.msg.crawlerConfigured) {
-      openCrawlerDialog(true)
-    }
   } catch (error) {
     notifyError('Failed to load app info', error)
   }
@@ -188,3 +182,4 @@ onMounted(async () => {
   await loadAppInfo()
 })
 </script>
+

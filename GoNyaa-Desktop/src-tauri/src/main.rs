@@ -16,6 +16,7 @@ use infra::migration;
 use infra::persistence::Persistence;
 
 const CACHE_TTL_SECONDS: u64 = 600;
+const DEFAULT_CRAWLER_BASE_URL: &str = "http://api.gonyaa.szncu.club";
 
 struct ViewedState {
     entries: HashSet<String>,
@@ -231,9 +232,20 @@ fn main() {
         .setup(|app| {
             let persistence = Persistence::initialize(app.handle())?;
             migration::ensure_data_files(&persistence)?;
-            let crawler_base_url = persistence
-                .load_crawler_base_url()?
-                .or_else(|| std::env::var("GONYAA_CRAWLER_BASE_URL").ok());
+            let stored_crawler_base_url = persistence.load_crawler_base_url()?;
+            let crawler_base_url = stored_crawler_base_url
+                .clone()
+                .or_else(|| std::env::var("GONYAA_CRAWLER_BASE_URL").ok())
+                .or_else(|| Some(DEFAULT_CRAWLER_BASE_URL.to_string()));
+
+            if stored_crawler_base_url.is_none() {
+                persistence.save_crawler_base_url(
+                    crawler_base_url
+                        .as_deref()
+                        .expect("default crawler base url should always exist"),
+                )?;
+            }
+
             let state = AppState::new(persistence, crawler_base_url)?;
             app.manage(state);
             Ok(())
@@ -257,3 +269,4 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+

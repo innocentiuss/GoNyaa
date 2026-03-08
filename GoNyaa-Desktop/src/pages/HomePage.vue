@@ -1,21 +1,14 @@
 ﻿<template>
   <div class="page-shell">
-    <div class="page-header">
-      <div>
-        <h1>GoNyaa Desktop</h1>
-        <p>Local data is managed by Tauri and Rust while the crawler stays remote.</p>
-      </div>
+    <div class="page-header" style="align-items: center;">
+      <h1 style="margin: 0;">GoNyaa Desktop</h1>
       <el-space wrap>
-        <el-button :icon="Search" @click="router.push('/search')">Search</el-button>
+        <el-button :icon="Search" type="primary" @click="router.push('/search')">Search</el-button>
         <el-button :icon="Refresh" @click="loadList(currentPage)">Refresh</el-button>
+        <el-button :icon="Setting" @click="openCrawlerDialog(false)">Crawler</el-button>
+        <el-button :icon="FolderOpened" @click="handleOpenDataDir">Data Dir</el-button>
       </el-space>
     </div>
-
-    <AppInfoCard
-      :info="appInfo"
-      @open-data-dir="handleOpenDataDir"
-      @open-crawler-settings="openCrawlerDialog(false)"
-    />
 
     <el-card shadow="hover">
       <div class="toolbar-row">
@@ -135,6 +128,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import {
   Delete,
   Download,
+  FolderOpened,
   Refresh,
   Search,
   Setting,
@@ -143,7 +137,6 @@ import {
 } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { desktopApi } from '@/api/desktop'
-import AppInfoCard from '@/components/AppInfoCard.vue'
 import CrawlerSettingsDialog from '@/components/CrawlerSettingsDialog.vue'
 import VideoTable from '@/components/VideoTable.vue'
 import { useNotifications } from '@/composables/useNotifications'
@@ -203,10 +196,6 @@ async function loadAppInfo() {
     const response = await desktopApi.getAppInfo()
     appInfo.value = response.msg
     crawlerBaseUrlDraft.value = response.msg.crawlerBaseUrl
-
-    if (!response.msg.crawlerConfigured) {
-      openCrawlerDialog(true)
-    }
 
     return response.msg
   } catch (error) {
@@ -366,3 +355,4 @@ onMounted(async () => {
   }
 })
 </script>
+
