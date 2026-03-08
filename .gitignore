@@ -4,3 +4,6 @@ node_modules
 GoNyaa-Desktop/dist/
 GoNyaa-Desktop/src-tauri/target/
 GoNyaa-Desktop/src-tauri/gen/
+AGENTS.md
+GEMINI.md
+migration_plan.md
