@@ -1,21 +1,94 @@
-Collecting data from nyaa and offering preview URL for each information which has Bango.
+# GoNyaa
 
-### Dependency
+GoNyaa is now a two-part project:
 
-Python 3.9 with Flask, BeautifulSoup, requests
+- `GoNyaa-Crawler`: the remote crawler service that scrapes `sukebei.nyaa.si`
+- `GoNyaa-Desktop`: the local desktop app built with Tauri, Rust, and Vue
 
-Java: JDK11 using Maven
+The old local Spring Boot server has been replaced by the desktop app runtime. The crawler contract remains compatible with `/app` and `/search`.
 
-### Component
+## Project Layout
 
-Python: Collecting data from nyaa order by uploading count;
+```text
+GoNyaa/
+  GoNyaa-Crawler/
+  GoNyaa-Desktop/
+```
 
-Java: Offering web frontend and backend;
+## Components
 
-RPC by HTTP.
+### GoNyaa-Crawler
 
-##### Extra attention
+Responsibilities:
 
-Update python flask ip/port info, `MGSList.txt`&`memory.txt`(create them first) path info in `GoNyaa-Server/src/main/resources/application.properties` before using.
+- Scrape `sukebei.nyaa.si`
+- Normalize crawler results
+- Expose `/app` and `/search`
 
-You could update MGS Bango list in `MGSList.txt` at the same directory above.
+Local run:
+
+```bash
+cd GoNyaa-Crawler
+pip install flask requests beautifulsoup4 lxml
+python Nyaa_Get.py
+```
+
+### GoNyaa-Desktop
+
+Responsibilities:
+
+- Call the remote crawler from Rust
+- Maintain `memory.txt` and `MGSList.txt`
+- Merge viewed state locally
+- Handle MGStage prefixes, import/export, and external link opening
+- Host the Vue UI inside Tauri
+
+Local run:
+
+```bash
+cd GoNyaa-Desktop
+npm install
+npm run tauri:dev
+```
+
+Frontend-only build:
+
+```bash
+cd GoNyaa-Desktop
+npm run build
+```
+
+Rust compile check:
+
+```bash
+cd GoNyaa-Desktop/src-tauri
+cargo check
+```
+
+## Data Compatibility
+
+The desktop app keeps compatibility with:
+
+- `memory.txt`
+- `MGSList.txt`
+
+On first launch it migrates legacy files into the Tauri app data directory if they already exist in an old `GoNyaa-Server` working directory.
+
+## Configuration
+
+The desktop app reads the crawler base URL from:
+
+- `GONYAA_CRAWLER_BASE_URL`
+
+If not set, it defaults to the current production crawler endpoint already wired into the app.
+
+## Packaging
+
+Build the desktop app bundle with:
+
+```bash
+cd GoNyaa-Desktop
+npm run tauri:build
+```
+
+This requires the normal Tauri Windows prerequisites on the machine.

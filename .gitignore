@@ -1,1 +1,6 @@
 /.idea
+node_modules
+.claude/settings.local.json
+GoNyaa-Desktop/dist/
+GoNyaa-Desktop/src-tauri/target/
+GoNyaa-Desktop/src-tauri/gen/
