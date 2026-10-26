@@ -61,6 +61,8 @@ Open **设置** on the home or search page to configure:
 
 These settings are saved alongside the crawler address in `settings.json` in the app data directory and survive restarts. Existing settings files receive the new defaults automatically. Updating link templates also updates links from cached lists. Magnet links continue to use the system's registered handler.
 
+On Windows, left-click a preview link to open it normally, or middle-click to open it while keeping GoNyaa in front for continued browsing. Middle-click temporarily protects GoNyaa from browser focus changes for up to five seconds. Clicking another window or using Alt to switch windows releases that protection immediately. This keeps the desktop app in front; it does not control the browser's selected tab.
+
 ## Current Scope
 
 This desktop app replaces the old local Spring Boot server.

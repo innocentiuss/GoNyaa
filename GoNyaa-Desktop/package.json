@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node --test scripts/video-actions.test.mjs",
     "dev": "vite --port 1420",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",

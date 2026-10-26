@@ -10,6 +10,7 @@ interface UseVideoActionsOptions {
 
 export function useVideoActions({ rows, autoViewed }: UseVideoActionsOptions) {
   const { notifyError, notifySuccess } = useNotifications()
+  const markingViewed = new Set<string>()
 
   function syncViewed(banGo: string, viewed: boolean) {
     rows.value = rows.value.map((row) =>
@@ -43,21 +44,25 @@ export function useVideoActions({ rows, autoViewed }: UseVideoActionsOptions) {
   }
 
   async function markViewedAfterOpen(row: VideoInfo) {
-    if (!autoViewed.value || row.viewed) {
+    const currentViewed = rows.value.find((item) => item.fanHao === row.fanHao)?.viewed ?? row.viewed
+    if (!autoViewed.value || currentViewed || markingViewed.has(row.fanHao)) {
       return
     }
 
+    markingViewed.add(row.fanHao)
     try {
       await desktopApi.toggleViewed(row.fanHao)
       syncViewed(row.fanHao, true)
     } catch (error) {
       notifyError('Failed to mark item as viewed', error)
+    } finally {
+      markingViewed.delete(row.fanHao)
     }
   }
 
-  async function handleOpenLink(row: VideoInfo, field: LinkField) {
+  async function handleOpenLink(row: VideoInfo, field: LinkField, keepForeground = false) {
     try {
-      await desktopApi.openExternal(row[field])
+      await desktopApi.openExternal(row[field], keepForeground)
       await markViewedAfterOpen(row)
     } catch (error) {
       notifyError('Failed to open external link', error)

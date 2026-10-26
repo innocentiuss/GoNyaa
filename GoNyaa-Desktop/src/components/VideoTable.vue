@@ -17,9 +17,27 @@
     <el-table-column label="预览" width="220">
       <template #default="{ row }">
         <el-space spacer="|">
-          <el-link type="primary" @click.prevent="emitOpenLink(row, 'viewLink')">官方</el-link>
-          <el-link type="primary" @click.prevent="emitOpenLink(row, 'viewLink2')">{{ thirdPartyLinks?.primary.name ?? 'JavStore' }}</el-link>
-          <el-link type="primary" @click.prevent="emitOpenLink(row, 'viewLink3')">{{ thirdPartyLinks?.secondary.name ?? 'JavArchive' }}</el-link>
+          <el-link
+            type="primary"
+            title="左键打开；中键打开并保持 GoNyaa 前台"
+            @click.prevent="emitOpenLink(row, 'viewLink')"
+            @mousedown.middle.prevent
+            @auxclick.middle.prevent="emitOpenLink(row, 'viewLink', true)"
+          >官方</el-link>
+          <el-link
+            type="primary"
+            title="左键打开；中键打开并保持 GoNyaa 前台"
+            @click.prevent="emitOpenLink(row, 'viewLink2')"
+            @mousedown.middle.prevent
+            @auxclick.middle.prevent="emitOpenLink(row, 'viewLink2', true)"
+          >{{ thirdPartyLinks?.primary.name ?? 'JavStore' }}</el-link>
+          <el-link
+            type="primary"
+            title="左键打开；中键打开并保持 GoNyaa 前台"
+            @click.prevent="emitOpenLink(row, 'viewLink3')"
+            @mousedown.middle.prevent
+            @auxclick.middle.prevent="emitOpenLink(row, 'viewLink3', true)"
+          >{{ thirdPartyLinks?.secondary.name ?? 'JavArchive' }}</el-link>
         </el-space>
       </template>
     </el-table-column>
@@ -53,7 +71,7 @@ defineProps<{
 
 const emit = defineEmits<{
   (event: 'toggle-viewed', row: VideoInfo, fromSwitch: boolean): void
-  (event: 'open-link', row: VideoInfo, field: LinkField): void
+  (event: 'open-link', row: VideoInfo, field: LinkField, keepForeground: boolean): void
   (event: 'open-magnet', url: string): void
   (event: 'copy-magnet', url: string): void
 }>()
@@ -63,7 +81,7 @@ function emitToggle(row: VideoInfo, fromSwitch: boolean) {
   emit('toggle-viewed', row, fromSwitch)
 }
 
-function emitOpenLink(row: VideoInfo, field: LinkField) {
-  emit('open-link', row, field)
+function emitOpenLink(row: VideoInfo, field: LinkField, keepForeground = false) {
+  emit('open-link', row, field, keepForeground)
 }
 </script>

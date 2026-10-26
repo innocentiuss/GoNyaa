@@ -33,8 +33,8 @@ export const desktopApi = {
   importViewed(mode: ImportMode) {
     return invokeResponse<string>('import_viewed', { mode })
   },
-  openExternal(url: string) {
-    return invokeResponse<string>('open_external', { url })
+  openExternal(url: string, keepForeground = false) {
+    return invokeResponse<string>('open_external', { url, keepForeground })
   },
   openMagnet(url: string) {
     return invokeResponse<string>('open_magnet', { url })
