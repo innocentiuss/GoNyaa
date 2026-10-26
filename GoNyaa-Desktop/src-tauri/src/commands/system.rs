@@ -2,6 +2,8 @@
 use tauri::State;
 
 use crate::domain::models::{AppInfo, WebResponse};
+use crate::domain::settings::AppPreferences;
+use crate::infra::browser;
 use crate::infra::errors::AppError;
 use crate::AppState;
 
@@ -11,16 +13,18 @@ pub fn clear_cache(state: State<'_, AppState>) -> Result<WebResponse<String>, St
 }
 
 #[tauri::command]
-pub fn open_external(url: String) -> Result<WebResponse<String>, String> {
-    that_detached(url.as_str())
-        .map_err(|error| AppError::Open(error.to_string()).to_string())?;
+pub fn open_external(
+    url: String,
+    state: State<'_, AppState>,
+) -> Result<WebResponse<String>, String> {
+    browser::open_url(&state.preferences_snapshot().browser, &url)
+        .map_err(|error| error.to_string())?;
     Ok(WebResponse::ok("open ok".to_string()))
 }
 
 #[tauri::command]
 pub fn open_magnet(url: String) -> Result<WebResponse<String>, String> {
-    that_detached(url.as_str())
-        .map_err(|error| AppError::Open(error.to_string()).to_string())?;
+    that_detached(url.as_str()).map_err(|error| AppError::Open(error.to_string()).to_string())?;
     Ok(WebResponse::ok("open ok".to_string()))
 }
 
@@ -38,12 +42,26 @@ pub fn get_app_info(state: State<'_, AppState>) -> Result<WebResponse<AppInfo>, 
 }
 
 #[tauri::command]
-pub fn save_crawler_base_url(
+pub fn save_app_settings(
     state: State<'_, AppState>,
-    url: String,
+    crawler_base_url: String,
+    preferences: AppPreferences,
 ) -> Result<WebResponse<AppInfo>, String> {
     state
-        .save_crawler_base_url(url)
+        .save_app_settings(crawler_base_url, preferences)
         .map(WebResponse::ok)
         .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn get_default_preferences() -> WebResponse<AppPreferences> {
+    WebResponse::ok(AppPreferences::default())
+}
+
+#[tauri::command]
+pub fn pick_browser_executable() -> WebResponse<Option<String>> {
+    let dialog = rfd::FileDialog::new().set_title("选择浏览器可执行文件");
+    #[cfg(target_os = "windows")]
+    let dialog = dialog.add_filter("浏览器程序", &["exe"]);
+    WebResponse::ok(dialog.pick_file().map(|path| path.display().to_string()))
 }

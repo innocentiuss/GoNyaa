@@ -34,4 +34,31 @@ export interface AppInfo {
   mgsListPath: string
   crawlerBaseUrl: string
   crawlerConfigured: boolean
+  preferences: AppPreferences
+}
+
+export type BrowserKind = 'default' | 'chrome' | 'edge' | 'firefox'
+
+export interface LinkProvider {
+  name: string
+  urlTemplate: string
+}
+
+export interface ThirdPartyLinks {
+  primary: LinkProvider
+  secondary: LinkProvider
+}
+
+export interface AppPreferences {
+  browser: {
+    kind: BrowserKind
+    privateMode: boolean
+    executablePath: string
+  }
+  thirdPartyLinks: ThirdPartyLinks
+}
+
+export interface SettingsDraft {
+  crawlerBaseUrl: string
+  preferences: AppPreferences
 }

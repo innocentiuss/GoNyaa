@@ -18,8 +18,8 @@
       <template #default="{ row }">
         <el-space spacer="|">
           <el-link type="primary" @click.prevent="emitOpenLink(row, 'viewLink')">官方</el-link>
-          <el-link type="primary" @click.prevent="emitOpenLink(row, 'viewLink2')">JavStore</el-link>
-          <el-link type="primary" @click.prevent="emitOpenLink(row, 'viewLink3')">JavArchive</el-link>
+          <el-link type="primary" @click.prevent="emitOpenLink(row, 'viewLink2')">{{ thirdPartyLinks?.primary.name ?? 'JavStore' }}</el-link>
+          <el-link type="primary" @click.prevent="emitOpenLink(row, 'viewLink3')">{{ thirdPartyLinks?.secondary.name ?? 'JavArchive' }}</el-link>
         </el-space>
       </template>
     </el-table-column>
@@ -44,10 +44,11 @@
 
 <script setup lang="ts">
 import { Check, Close, CopyDocument, Magnet } from '@element-plus/icons-vue'
-import type { LinkField, VideoInfo } from '@/types/app'
+import type { LinkField, ThirdPartyLinks, VideoInfo } from '@/types/app'
 
 defineProps<{
   rows: VideoInfo[]
+  thirdPartyLinks?: ThirdPartyLinks
 }>()
 
 const emit = defineEmits<{

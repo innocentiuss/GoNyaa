@@ -9,11 +9,13 @@ use tauri::Manager;
 
 use domain::mapper;
 use domain::models::{AppInfo, TableData, VideoInfoItem};
+use domain::settings::{AppPreferences, BrowserKind};
+use infra::browser;
 use infra::cache::TtlCache;
 use infra::crawler_client::CrawlerClient;
 use infra::errors::{AppError, AppResult};
 use infra::migration;
-use infra::persistence::Persistence;
+use infra::persistence::{Persistence, StoredSettings};
 
 const CACHE_TTL_SECONDS: u64 = 600;
 const DEFAULT_CRAWLER_BASE_URL: &str = "http://api.gonyaa.szncu.club";
@@ -24,6 +26,7 @@ struct ViewedState {
 }
 
 pub struct AppState {
+    settings: Mutex<StoredSettings>,
     crawler_client: Mutex<Option<CrawlerClient>>,
     persistence: Persistence,
     viewed: Mutex<ViewedState>,
@@ -33,18 +36,22 @@ pub struct AppState {
 }
 
 impl AppState {
-    fn new(persistence: Persistence, crawler_base_url: Option<String>) -> AppResult<Self> {
+    fn new(persistence: Persistence, settings: StoredSettings) -> AppResult<Self> {
         let viewed = Persistence::parse_viewed(&persistence.load_memory_text()?);
         let mgs_list = Persistence::parse_mgs_list(&persistence.load_mgs_list_text()?);
-        let crawler_client = match crawler_base_url {
+        let crawler_client = match settings.crawler_base_url.clone() {
             Some(url) => Some(CrawlerClient::new(Self::normalize_crawler_base_url(&url)?)),
             None => None,
         };
 
         Ok(Self {
+            settings: Mutex::new(settings),
             crawler_client: Mutex::new(crawler_client),
             persistence,
-            viewed: Mutex::new(ViewedState { entries: viewed, dirty: false }),
+            viewed: Mutex::new(ViewedState {
+                entries: viewed,
+                dirty: false,
+            }),
             mgs_list: Mutex::new(mgs_list),
             list_cache: Mutex::new(TtlCache::new(CACHE_TTL_SECONDS)),
             search_cache: Mutex::new(TtlCache::new(CACHE_TTL_SECONDS)),
@@ -92,12 +99,24 @@ impl AppState {
         self.mgs_list.lock().expect("mgs lock").clone()
     }
 
+    fn preferences_snapshot(&self) -> AppPreferences {
+        self.settings
+            .lock()
+            .expect("settings lock")
+            .preferences
+            .clone()
+    }
+
     async fn fetch_list(&self, page: u32, sort: String) -> AppResult<TableData> {
         let key = format!("{page}:{sort}");
         if let Some(mut cached) = self.list_cache.lock().expect("list cache lock").get(&key) {
             let viewed = self.viewed_snapshot();
             mapper::apply_viewed(&mut cached, &viewed);
-            return Ok(TableData { page, vo_list: cached });
+            mapper::apply_links(&mut cached, &self.preferences_snapshot().third_party_links);
+            return Ok(TableData {
+                page,
+                vo_list: cached,
+            });
         }
 
         let crawler_client = self.crawler_client()?;
@@ -105,22 +124,38 @@ impl AppState {
         let viewed = self.viewed_snapshot();
         let crawler_items = crawler_client.fetch_list(page, &sort).await?;
         let information = mapper::to_information(&crawler_items, &mgs);
-        let mapped = mapper::to_view_items(&information, &viewed);
+        let mapped = mapper::to_view_items(
+            &information,
+            &viewed,
+            &self.preferences_snapshot().third_party_links,
+        );
 
         self.list_cache
             .lock()
             .expect("list cache lock")
             .set(key, mapped.clone());
 
-        Ok(TableData { page, vo_list: mapped })
+        Ok(TableData {
+            page,
+            vo_list: mapped,
+        })
     }
 
     async fn search_list(&self, page: u32, sort: String, keyword: String) -> AppResult<TableData> {
         let key = format!("{page}:{sort}:{keyword}");
-        if let Some(mut cached) = self.search_cache.lock().expect("search cache lock").get(&key) {
+        if let Some(mut cached) = self
+            .search_cache
+            .lock()
+            .expect("search cache lock")
+            .get(&key)
+        {
             let viewed = self.viewed_snapshot();
             mapper::apply_viewed(&mut cached, &viewed);
-            return Ok(TableData { page, vo_list: cached });
+            mapper::apply_links(&mut cached, &self.preferences_snapshot().third_party_links);
+            return Ok(TableData {
+                page,
+                vo_list: cached,
+            });
         }
 
         let crawler_client = self.crawler_client()?;
@@ -128,14 +163,21 @@ impl AppState {
         let viewed = self.viewed_snapshot();
         let crawler_items = crawler_client.search_list(page, &sort, &keyword).await?;
         let information = mapper::to_information(&crawler_items, &mgs);
-        let mapped = mapper::to_view_items(&information, &viewed);
+        let mapped = mapper::to_view_items(
+            &information,
+            &viewed,
+            &self.preferences_snapshot().third_party_links,
+        );
 
         self.search_cache
             .lock()
             .expect("search cache lock")
             .set(key, mapped.clone());
 
-        Ok(TableData { page, vo_list: mapped })
+        Ok(TableData {
+            page,
+            vo_list: mapped,
+        })
     }
 
     fn toggle_viewed(&self, ban_go: String) -> String {
@@ -189,11 +231,30 @@ impl AppState {
         Ok("save ok".to_string())
     }
 
-    fn save_crawler_base_url(&self, url: String) -> AppResult<AppInfo> {
+    fn save_app_settings(&self, url: String, preferences: AppPreferences) -> AppResult<AppInfo> {
         let normalized = Self::normalize_crawler_base_url(&url)?;
-        self.persistence.save_crawler_base_url(&normalized)?;
-        *self.crawler_client.lock().expect("crawler lock") = Some(CrawlerClient::new(normalized));
-        self.clear_cache();
+        let preferences = preferences.normalize().map_err(AppError::Config)?;
+        if preferences.browser.kind != BrowserKind::Default {
+            browser::resolve_executable(&preferences.browser)?;
+        }
+        let crawler_changed;
+        {
+            let mut settings = self.settings.lock().expect("settings lock");
+            crawler_changed = settings.crawler_base_url.as_deref() != Some(normalized.as_str());
+            let updated = StoredSettings {
+                crawler_base_url: Some(normalized.clone()),
+                preferences,
+            };
+            self.persistence.save_settings(&updated)?;
+            *settings = updated;
+            if crawler_changed {
+                *self.crawler_client.lock().expect("crawler lock") =
+                    Some(CrawlerClient::new(normalized));
+            }
+        }
+        if crawler_changed {
+            self.clear_cache();
+        }
         Ok(self.get_app_info())
     }
 
@@ -223,6 +284,7 @@ impl AppState {
             mgs_list_path: self.persistence.mgs_list_path().display().to_string(),
             crawler_base_url: crawler_base_url.clone().unwrap_or_default(),
             crawler_configured: crawler_base_url.is_some(),
+            preferences: self.preferences_snapshot(),
         }
     }
 }
@@ -232,21 +294,16 @@ fn main() {
         .setup(|app| {
             let persistence = Persistence::initialize(app.handle())?;
             migration::ensure_data_files(&persistence)?;
-            let stored_crawler_base_url = persistence.load_crawler_base_url()?;
-            let crawler_base_url = stored_crawler_base_url
-                .clone()
-                .or_else(|| std::env::var("GONYAA_CRAWLER_BASE_URL").ok())
-                .or_else(|| Some(DEFAULT_CRAWLER_BASE_URL.to_string()));
-
-            if stored_crawler_base_url.is_none() {
-                persistence.save_crawler_base_url(
-                    crawler_base_url
-                        .as_deref()
-                        .expect("default crawler base url should always exist"),
-                )?;
+            let mut settings = persistence.load_settings()?;
+            if settings.crawler_base_url.is_none() {
+                settings.crawler_base_url = Some(
+                    std::env::var("GONYAA_CRAWLER_BASE_URL")
+                        .unwrap_or_else(|_| DEFAULT_CRAWLER_BASE_URL.to_string()),
+                );
+                persistence.save_settings(&settings)?;
             }
 
-            let state = AppState::new(persistence, crawler_base_url)?;
+            let state = AppState::new(persistence, settings)?;
             app.manage(state);
             Ok(())
         })
@@ -264,9 +321,111 @@ fn main() {
             commands::system::open_magnet,
             commands::system::open_data_dir,
             commands::system::get_app_info,
-            commands::system::save_crawler_base_url,
+            commands::system::save_app_settings,
+            commands::system::pick_browser_executable,
+            commands::system::get_default_preferences,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn settings_survive_restart_and_update_both_caches_without_network() {
+        let directory = std::env::temp_dir().join(format!(
+            "gonyaa-settings-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let persistence = Persistence::in_directory(directory.clone()).unwrap();
+        persistence.save_memory_text("ABC-123;").unwrap();
+        persistence.save_mgs_list_text("").unwrap();
+        let settings = StoredSettings {
+            crawler_base_url: Some("http://127.0.0.1:1".into()),
+            ..Default::default()
+        };
+        let state = AppState::new(persistence, settings).unwrap();
+        let info = domain::models::VideoInformation {
+            fan_hao: "ABC-123".into(),
+            view_link: "https://example.com/official".into(),
+            size: String::new(),
+            date: String::new(),
+            title: String::new(),
+            up_cnt: String::new(),
+            down_cnt: String::new(),
+            fin_cnt: String::new(),
+            magnet_link: String::new(),
+        };
+        let rows = mapper::to_view_items(
+            &[info],
+            &state.viewed_snapshot(),
+            &state.preferences_snapshot().third_party_links,
+        );
+        state
+            .list_cache
+            .lock()
+            .unwrap()
+            .set("1:uploading".into(), rows.clone());
+        state
+            .search_cache
+            .lock()
+            .unwrap()
+            .set("1:uploading:ABC".into(), rows);
+
+        let mut preferences = AppPreferences::default();
+        preferences.third_party_links.primary.name = "Custom Search".into();
+        preferences.third_party_links.primary.url_template = "https://example.com/?q={id}".into();
+        // Use a real executable path, without launching it, to verify browser settings persistence.
+        preferences.browser.kind = BrowserKind::Chrome;
+        preferences.browser.private_mode = true;
+        preferences.browser.executable_path =
+            std::env::current_exe().unwrap().display().to_string();
+        state
+            .save_app_settings("http://127.0.0.1:1/".into(), preferences.clone())
+            .unwrap();
+        let invalid = AppPreferences {
+            browser: domain::settings::BrowserSettings {
+                kind: BrowserKind::Default,
+                private_mode: true,
+                executable_path: String::new(),
+            },
+            ..preferences
+        };
+        assert!(state
+            .save_app_settings("http://127.0.0.1:2".into(), invalid)
+            .is_err());
+        for table in [
+            state.fetch_list(1, "uploading".into()).await.unwrap(),
+            state
+                .search_list(1, "uploading".into(), "ABC".into())
+                .await
+                .unwrap(),
+        ] {
+            assert_eq!(
+                table.vo_list[0].view_link2,
+                "https://example.com/?q=ABC-123"
+            );
+            assert_eq!(table.vo_list[0].view_link, "https://example.com/official");
+            assert!(table.vo_list[0].viewed);
+        }
+
+        let persistence = Persistence::in_directory(directory.clone()).unwrap();
+        let restored =
+            AppState::new(persistence, state.persistence.load_settings().unwrap()).unwrap();
+        assert_eq!(
+            restored.crawler_base_url().as_deref(),
+            Some("http://127.0.0.1:1")
+        );
+        let preferences = restored.preferences_snapshot();
+        assert!(preferences.browser.private_mode);
+        assert_eq!(preferences.browser.kind, BrowserKind::Chrome);
+        assert_eq!(preferences.third_party_links.primary.name, "Custom Search");
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+}

@@ -5,7 +5,7 @@
       <el-space wrap>
         <el-button :icon="Search" type="primary" @click="router.push('/search')">Search</el-button>
         <el-button :icon="Refresh" @click="loadList(currentPage)">Refresh</el-button>
-        <el-button :icon="Setting" @click="openCrawlerDialog(false)">Crawler</el-button>
+        <el-button :icon="Setting" @click="openCrawlerDialog(false)">设置</el-button>
         <el-button :icon="FolderOpened" @click="handleOpenDataDir">Data Dir</el-button>
       </el-space>
     </div>
@@ -67,8 +67,8 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="viewLink">Official</el-dropdown-item>
-              <el-dropdown-item command="viewLink2">JavStore</el-dropdown-item>
-              <el-dropdown-item command="viewLink3">JavArchive</el-dropdown-item>
+              <el-dropdown-item command="viewLink2">{{ appInfo?.preferences.thirdPartyLinks.primary.name ?? 'JavStore' }}</el-dropdown-item>
+              <el-dropdown-item command="viewLink3">{{ appInfo?.preferences.thirdPartyLinks.secondary.name ?? 'JavArchive' }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -85,6 +85,7 @@
     <el-card shadow="never" class="table-card" v-loading="tableLoading">
       <VideoTable
         :rows="filteredRows"
+        :third-party-links="appInfo?.preferences.thirdPartyLinks"
         @toggle-viewed="handleViewed"
         @open-link="handleOpenLink"
         @open-magnet="handleOpenMagnet"
@@ -92,12 +93,13 @@
       />
     </el-card>
 
-    <CrawlerSettingsDialog
+    <AppSettingsDialog
       v-model="crawlerDialogVisible"
       :initial-url="crawlerBaseUrlDraft"
+      :initial-preferences="appInfo?.preferences"
       :required="crawlerDialogRequired"
       :saving="crawlerSaving"
-      @save="handleSaveCrawlerBaseUrl"
+      @save="handleSaveSettings"
     />
 
     <el-dialog v-model="mgsDialogVisible" title="MGStage Prefixes" width="560px">
@@ -137,11 +139,11 @@ import {
 } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { desktopApi } from '@/api/desktop'
-import CrawlerSettingsDialog from '@/components/CrawlerSettingsDialog.vue'
+import AppSettingsDialog from '@/components/AppSettingsDialog.vue'
 import VideoTable from '@/components/VideoTable.vue'
 import { useNotifications } from '@/composables/useNotifications'
 import { useVideoActions } from '@/composables/useVideoActions'
-import type { AppInfo, ImportMode, LinkField, SortKey, VideoInfo } from '@/types/app'
+import type { AppInfo, ImportMode, LinkField, SettingsDraft, SortKey, VideoInfo } from '@/types/app'
 
 const router = useRouter()
 const { notifyError, notifySuccess, notifyWarning } = useNotifications()
@@ -245,19 +247,18 @@ function handleSortChange() {
   loadList(1)
 }
 
-async function handleSaveCrawlerBaseUrl(url: string) {
+async function handleSaveSettings(draft: SettingsDraft) {
   crawlerSaving.value = true
   try {
-    const response = await desktopApi.saveCrawlerBaseUrl(url)
+    const response = await desktopApi.saveSettings(draft)
     appInfo.value = response.msg
     crawlerBaseUrlDraft.value = response.msg.crawlerBaseUrl
     crawlerDialogVisible.value = false
     crawlerDialogRequired.value = false
-    currentPage.value = 1
-    notifySuccess('Crawler address saved', response.msg.crawlerBaseUrl)
-    await loadList(1)
+    notifySuccess('设置已保存')
+    await loadList(currentPage.value)
   } catch (error) {
-    notifyError('Failed to save crawler address', error)
+    notifyError('保存设置失败', error)
   } finally {
     crawlerSaving.value = false
   }

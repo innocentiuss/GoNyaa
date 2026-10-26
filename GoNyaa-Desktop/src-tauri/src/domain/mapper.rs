@@ -5,6 +5,7 @@ use base64::Engine;
 
 use crate::domain::links;
 use crate::domain::models::{CrawlerResponseItem, VideoInfoItem, VideoInformation};
+use crate::domain::settings::ThirdPartyLinks;
 
 fn decode_title(value: &str) -> String {
     STANDARD
@@ -14,7 +15,10 @@ fn decode_title(value: &str) -> String {
         .unwrap_or_else(|| value.to_string())
 }
 
-pub fn to_information(items: &[CrawlerResponseItem], mgs_prefixes: &[String]) -> Vec<VideoInformation> {
+pub fn to_information(
+    items: &[CrawlerResponseItem],
+    mgs_prefixes: &[String],
+) -> Vec<VideoInformation> {
     items
         .iter()
         .map(|item| {
@@ -35,7 +39,11 @@ pub fn to_information(items: &[CrawlerResponseItem], mgs_prefixes: &[String]) ->
         .collect()
 }
 
-pub fn to_view_items(items: &[VideoInformation], viewed: &HashSet<String>) -> Vec<VideoInfoItem> {
+pub fn to_view_items(
+    items: &[VideoInformation],
+    viewed: &HashSet<String>,
+    links: &ThirdPartyLinks,
+) -> Vec<VideoInfoItem> {
     items
         .iter()
         .map(|item| {
@@ -50,19 +58,34 @@ pub fn to_view_items(items: &[VideoInformation], viewed: &HashSet<String>) -> Ve
                 down_cnt: item.down_cnt.clone(),
                 fin_cnt: item.fin_cnt.clone(),
                 magnet_link: item.magnet_link.clone(),
-                is_viewed: if is_viewed { "是".into() } else { "否".into() },
+                is_viewed: if is_viewed {
+                    "是".into()
+                } else {
+                    "否".into()
+                },
                 viewed: is_viewed,
-                view_link2: links::jav_store_link(&item.fan_hao),
-                view_link3: links::jav_archive_link(&item.fan_hao),
+                view_link2: links.primary.render(&item.fan_hao),
+                view_link3: links.secondary.render(&item.fan_hao),
             }
         })
         .collect()
+}
+
+pub fn apply_links(items: &mut [VideoInfoItem], links: &ThirdPartyLinks) {
+    for item in items {
+        item.view_link2 = links.primary.render(&item.fan_hao);
+        item.view_link3 = links.secondary.render(&item.fan_hao);
+    }
 }
 
 pub fn apply_viewed(items: &mut [VideoInfoItem], viewed: &HashSet<String>) {
     for item in items.iter_mut() {
         let is_viewed = viewed.contains(&item.fan_hao);
         item.viewed = is_viewed;
-        item.is_viewed = if is_viewed { "是".into() } else { "否".into() };
+        item.is_viewed = if is_viewed {
+            "是".into()
+        } else {
+            "否".into()
+        };
     }
 }

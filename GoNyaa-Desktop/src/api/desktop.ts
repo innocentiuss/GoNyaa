@@ -1,5 +1,5 @@
 ﻿import { invoke } from '@tauri-apps/api/core'
-import type { AppInfo, ImportMode, SortKey, TableData, WebResponse } from '@/types/app'
+import type { AppInfo, AppPreferences, ImportMode, SettingsDraft, SortKey, TableData, WebResponse } from '@/types/app'
 
 async function invokeResponse<T>(command: string, args?: Record<string, unknown>) {
   return invoke<WebResponse<T>>(command, args)
@@ -45,7 +45,13 @@ export const desktopApi = {
   getAppInfo() {
     return invokeResponse<AppInfo>('get_app_info')
   },
-  saveCrawlerBaseUrl(url: string) {
-    return invokeResponse<AppInfo>('save_crawler_base_url', { url })
+  saveSettings(draft: SettingsDraft) {
+    return invokeResponse<AppInfo>('save_app_settings', { ...draft })
+  },
+  getDefaultPreferences() {
+    return invokeResponse<AppPreferences>('get_default_preferences')
+  },
+  pickBrowserExecutable() {
+    return invokeResponse<string | null>('pick_browser_executable')
   },
 }

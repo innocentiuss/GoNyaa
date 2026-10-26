@@ -1,4 +1,5 @@
-﻿pub mod cache;
+﻿pub mod browser;
+pub mod cache;
 pub mod crawler_client;
 pub mod errors;
 pub mod migration;

@@ -81,4 +81,5 @@ pub struct AppInfo {
     pub mgs_list_path: String,
     pub crawler_base_url: String,
     pub crawler_configured: bool,
+    pub preferences: super::settings::AppPreferences,
 }

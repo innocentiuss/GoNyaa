@@ -5,7 +5,10 @@ pub fn detect_video_type(fan_hao: &str, mgs_prefixes: &[String]) -> VideoType {
         return VideoType::Fc2;
     }
 
-    if mgs_prefixes.iter().any(|prefix| fan_hao.starts_with(prefix)) {
+    if mgs_prefixes
+        .iter()
+        .any(|prefix| fan_hao.starts_with(prefix))
+    {
         return VideoType::Prestige;
     }
 
@@ -23,14 +26,6 @@ pub fn preview_link(fan_hao: &str, kind: &VideoType) -> String {
         }
         VideoType::Normal => format!("https://www.dmm.co.jp/search/=/searchstr={fan_hao}/"),
     }
-}
-
-pub fn jav_store_link(fan_hao: &str) -> String {
-    format!("https://javstore.net/search?q={fan_hao}")
-}
-
-pub fn jav_archive_link(fan_hao: &str) -> String {
-    format!("https://javarchive.com/#gsc.tab=0&gsc.q={fan_hao}")
 }
 
 pub fn sort_to_crawler(sort: &str) -> &'static str {

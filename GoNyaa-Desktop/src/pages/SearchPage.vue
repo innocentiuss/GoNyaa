@@ -4,7 +4,7 @@
       <h1 style="margin: 0;">Search</h1>
       <el-space wrap>
         <el-button :icon="House" @click="router.push('/')">Back Home</el-button>
-        <el-button :icon="Setting" @click="openCrawlerDialog(false)">Crawler</el-button>
+        <el-button :icon="Setting" @click="openCrawlerDialog(false)">设置</el-button>
       </el-space>
     </div>
 
@@ -46,6 +46,7 @@
     <el-card shadow="never" v-loading="loading">
       <VideoTable
         :rows="rows"
+        :third-party-links="appInfo?.preferences.thirdPartyLinks"
         @toggle-viewed="handleViewed"
         @open-link="handleOpenLink"
         @open-magnet="handleOpenMagnet"
@@ -53,12 +54,13 @@
       />
     </el-card>
 
-    <CrawlerSettingsDialog
+    <AppSettingsDialog
       v-model="crawlerDialogVisible"
       :initial-url="crawlerBaseUrlDraft"
+      :initial-preferences="appInfo?.preferences"
       :required="crawlerDialogRequired"
       :saving="crawlerSaving"
-      @save="handleSaveCrawlerBaseUrl"
+      @save="handleSaveSettings"
     />
   </div>
 </template>
@@ -68,11 +70,11 @@ import { onMounted, ref } from 'vue'
 import { House, Search, Setting } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { desktopApi } from '@/api/desktop'
-import CrawlerSettingsDialog from '@/components/CrawlerSettingsDialog.vue'
+import AppSettingsDialog from '@/components/AppSettingsDialog.vue'
 import VideoTable from '@/components/VideoTable.vue'
 import { useNotifications } from '@/composables/useNotifications'
 import { useVideoActions } from '@/composables/useVideoActions'
-import type { AppInfo, SortKey, VideoInfo } from '@/types/app'
+import type { AppInfo, SettingsDraft, SortKey, VideoInfo } from '@/types/app'
 
 const router = useRouter()
 const { notifyError, notifySuccess, notifyWarning } = useNotifications()
@@ -121,17 +123,18 @@ function ensureCrawlerConfigured() {
   return false
 }
 
-async function handleSaveCrawlerBaseUrl(url: string) {
+async function handleSaveSettings(draft: SettingsDraft) {
   crawlerSaving.value = true
   try {
-    const response = await desktopApi.saveCrawlerBaseUrl(url)
+    const response = await desktopApi.saveSettings(draft)
     appInfo.value = response.msg
     crawlerBaseUrlDraft.value = response.msg.crawlerBaseUrl
     crawlerDialogVisible.value = false
     crawlerDialogRequired.value = false
-    notifySuccess('Crawler address saved', response.msg.crawlerBaseUrl)
+    notifySuccess('设置已保存')
+    if (rows.value.length) await runSearch()
   } catch (error) {
-    notifyError('Failed to save crawler address', error)
+    notifyError('保存设置失败', error)
   } finally {
     crawlerSaving.value = false
   }
