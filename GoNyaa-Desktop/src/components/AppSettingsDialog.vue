@@ -12,6 +12,25 @@
     <div class="settings-body">
       <el-alert v-if="required" type="warning" :closable="false" title="请先填写爬虫地址，再使用列表和搜索。" />
       <el-tabs v-if="preferences" v-model="activeTab">
+        <el-tab-pane label="列表显示" name="display">
+          <el-form label-position="top" :disabled="saving">
+            <el-form-item label="完成数高亮">
+              <el-switch v-model="preferences.completionHighlight.enabled" />
+              <span class="switch-tip">用低饱和淡绿色标识达到条件的整行</span>
+            </el-form-item>
+            <el-form-item label="完成数阈值">
+              <el-input-number
+                v-model="preferences.completionHighlight.threshold"
+                :min="0"
+                :max="4294967295"
+                :precision="0"
+                :step="100"
+                controls-position="right"
+              />
+            </el-form-item>
+            <p class="field-tip">完成数严格大于此数值时高亮，等于时不高亮。首页和搜索结果均生效。</p>
+          </el-form>
+        </el-tab-pane>
         <el-tab-pane label="浏览器" name="browser">
           <el-form label-position="top" :disabled="saving">
             <el-form-item label="打开预览链接的浏览器">
@@ -140,6 +159,12 @@ async function resetLinks() {
 
 function handleSave() {
   if (!preferences.value || props.saving) return
+  const threshold = preferences.value.completionHighlight.threshold
+  if (!Number.isInteger(threshold) || threshold < 0 || threshold > 4294967295) {
+    activeTab.value = 'display'
+    notifyWarning('完成数阈值需为 0–4294967295 的整数')
+    return
+  }
   if (!localUrl.value.trim()) {
     activeTab.value = 'crawler'
     notifyWarning('请填写爬虫地址')

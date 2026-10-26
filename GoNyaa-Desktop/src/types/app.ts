@@ -49,6 +49,11 @@ export interface ThirdPartyLinks {
   secondary: LinkProvider
 }
 
+export interface CompletionHighlight {
+  enabled: boolean
+  threshold: number
+}
+
 export interface AppPreferences {
   browser: {
     kind: BrowserKind
@@ -56,6 +61,7 @@ export interface AppPreferences {
     executablePath: string
   }
   thirdPartyLinks: ThirdPartyLinks
+  completionHighlight: CompletionHighlight
 }
 
 export interface SettingsDraft {

@@ -58,6 +58,7 @@ Open **设置** on the home or search page to configure:
 - The system default browser, Chrome, Edge, or Firefox. For a named browser, the app searches common installation locations and PATH; you can also select its executable manually (including a portable installation).
 - Private browsing for Chrome, Edge, or Firefox. Select a specific browser to enable this option. It applies to individual preview links and batch opening.
 - The display names and URL templates for the two third-party preview links. Include `{id}` where the video ID belongs, for example `https://example.com/search?q={id}`. IDs are URL encoded; query strings and fragments are supported. **恢复默认链接** restores JavStore and JavArchive.
+- Under **列表显示**, enable **完成数高亮** and choose a non-negative integer threshold. Rows whose completed count is strictly greater than the threshold receive a muted pale green background on both the home and search pages. This is disabled by default; the initial threshold is 1000.
 
 These settings are saved alongside the crawler address in `settings.json` in the app data directory and survive restarts. Existing settings files receive the new defaults automatically. Updating link templates also updates links from cached lists. Magnet links continue to use the system's registered handler.
 

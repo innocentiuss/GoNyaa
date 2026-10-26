@@ -103,11 +103,28 @@ impl Default for ThirdPartyLinks {
     }
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct CompletionHighlight {
+    pub enabled: bool,
+    pub threshold: u32,
+}
+
+impl Default for CompletionHighlight {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            threshold: 1000,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct AppPreferences {
     pub browser: BrowserSettings,
     pub third_party_links: ThirdPartyLinks,
+    pub completion_highlight: CompletionHighlight,
 }
 
 impl AppPreferences {

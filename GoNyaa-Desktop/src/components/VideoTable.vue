@@ -1,5 +1,5 @@
 ﻿<template>
-  <el-table :data="rows" stripe table-layout="auto" style="width: 100%">
+  <el-table :data="rows" :row-class-name="rowClassName" class="video-table" stripe table-layout="auto" style="width: 100%">
     <el-table-column label="已阅" width="76">
       <template #default="{ row }">
         <el-switch
@@ -62,12 +62,23 @@
 
 <script setup lang="ts">
 import { Check, Close, CopyDocument, Magnet } from '@element-plus/icons-vue'
-import type { LinkField, ThirdPartyLinks, VideoInfo } from '@/types/app'
+import type { CompletionHighlight, LinkField, ThirdPartyLinks, VideoInfo } from '@/types/app'
 
-defineProps<{
+const props = defineProps<{
   rows: VideoInfo[]
   thirdPartyLinks?: ThirdPartyLinks
+  completionHighlight?: CompletionHighlight
 }>()
+
+function rowClassName({ row }: { row: VideoInfo }) {
+  if (!props.completionHighlight?.enabled) return ''
+  const rawCount = row.finCnt.trim()
+  if (!/^(?:\d+|\d{1,3}(?:,\d{3})+)$/.test(rawCount)) return ''
+  const count = Number(rawCount.replace(/,/g, ''))
+  return Number.isFinite(count) && count > props.completionHighlight.threshold
+    ? 'completion-highlight'
+    : ''
+}
 
 const emit = defineEmits<{
   (event: 'toggle-viewed', row: VideoInfo, fromSwitch: boolean): void
@@ -85,3 +96,13 @@ function emitOpenLink(row: VideoInfo, field: LinkField, keepForeground = false) 
   emit('open-link', row, field, keepForeground)
 }
 </script>
+
+<style scoped>
+.video-table :deep(.el-table__body tr.completion-highlight > td.el-table__cell) {
+  background-color: #edf4ef;
+}
+
+.video-table :deep(.el-table__body tr.completion-highlight:hover > td.el-table__cell) {
+  background-color: #e2ece5;
+}
+</style>

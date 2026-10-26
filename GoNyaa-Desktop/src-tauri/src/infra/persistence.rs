@@ -150,12 +150,16 @@ mod tests {
         let mut settings: StoredSettings =
             serde_json::from_str(r#"{"crawlerBaseUrl":"http://localhost:5001"}"#).unwrap();
         assert_eq!(settings.preferences.browser.kind, BrowserKind::Default);
+        assert!(!settings.preferences.completion_highlight.enabled);
+        assert_eq!(settings.preferences.completion_highlight.threshold, 1000);
         assert_eq!(
             settings.preferences.third_party_links.primary.name,
             "JavStore"
         );
         settings.preferences.browser.kind = BrowserKind::Firefox;
         settings.preferences.browser.private_mode = true;
+        settings.preferences.completion_highlight.enabled = true;
+        settings.preferences.completion_highlight.threshold = 1200;
         settings.preferences.third_party_links.primary.url_template =
             "https://example.com/{id}".into();
         let restored: StoredSettings =
@@ -165,6 +169,8 @@ mod tests {
             Some("http://localhost:5001")
         );
         assert!(restored.preferences.browser.private_mode);
+        assert!(restored.preferences.completion_highlight.enabled);
+        assert_eq!(restored.preferences.completion_highlight.threshold, 1200);
         assert_eq!(
             restored
                 .preferences

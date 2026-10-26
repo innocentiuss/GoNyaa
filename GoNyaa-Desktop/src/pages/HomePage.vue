@@ -86,6 +86,7 @@
       <VideoTable
         :rows="filteredRows"
         :third-party-links="appInfo?.preferences.thirdPartyLinks"
+        :completion-highlight="appInfo?.preferences.completionHighlight"
         @toggle-viewed="handleViewed"
         @open-link="handleOpenLink"
         @open-magnet="handleOpenMagnet"
